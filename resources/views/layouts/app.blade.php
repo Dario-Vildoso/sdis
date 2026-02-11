@@ -1,47 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" class="light-style layout-menu-fixed">
-<head>
-    <meta charset="UTF-8">
-    <title>@yield('title', 'Materio')</title>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}">
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}">
-</head>
+        <!-- Scripts -->
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    </head>
+    <body class="font-sans antialiased">
+        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+            @include('layouts.navigation')
 
-<body>
-<div class="layout-wrapper layout-content-navbar">
-    <div class="layout-container">
+            <!-- Page Heading -->
+            @isset($header)
+                <header class="bg-white dark:bg-gray-800 shadow">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                        {{ $header }}
+                    </div>
+                </header>
+            @endisset
 
-        {{-- Sidebar --}}
-        @include('sidebar')
-
-        <div class="layout-page">
-
-            {{-- Navbar --}}
-            @include('navbar')
-
-            {{-- Content --}}
-            <div class="content-wrapper">
-                <div class="container-xxl flex-grow-1 container-p-y">
-                    @yield('content')
-                </div>
-            </div>
-
+            <!-- Page Content -->
+            <main>
+                {{ $slot }}
+            </main>
         </div>
-    </div>
-</div>
-
-<!-- Core JS -->
-<script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
-<script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
-<script src="{{ asset('assets/js/main.js') }}"></script>
-
-</body>
+    </body>
 </html>

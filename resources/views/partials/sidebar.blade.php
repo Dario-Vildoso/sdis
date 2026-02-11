@@ -1,4 +1,4 @@
-<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-dark">
 
     <div class="app-brand demo">
         <a href="{{ url('/') }}" class="app-brand-link">
@@ -10,7 +10,13 @@
 
     <div class="menu-inner-shadow"></div>
 
-    <ul class="menu-inner py-1">
+    <ul class="menu-inner">
+        <li class="menu-item">
+            <a href="{{ route('users.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-user"></i>
+                <div>Usuarios</div>
+            </a>
+        </li>
 
         <!-- Dashboard -->
         <li class="menu-item active">
