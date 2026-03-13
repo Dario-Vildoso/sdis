@@ -257,49 +257,53 @@ class DatabaseSeeder extends Seeder
         $var5 = Variable::create(['descripcion' => 'Atenciones Preventivas']);
 
         // SUBVARIABLES para Consultas Externas
-        SubVariable::create(['descripcion' => 'Consultas Generales', 'variable_id' => $var1->id]);
-        SubVariable::create(['descripcion' => 'Consultas Especializadas', 'variable_id' => $var1->id]);
-        SubVariable::create(['descripcion' => 'Consultas Odontológicas', 'variable_id' => $var1->id]);
+        SubVariable::create(['descripcion' => 'Consultas Generales', 'estado' => 'activo', 'variable_id' => $var1->id]);
+        SubVariable::create(['descripcion' => 'Consultas Especializadas', 'estado' => 'activo', 'variable_id' => $var1->id]);
+        SubVariable::create(['descripcion' => 'Consultas Odontológicas', 'estado' => 'activo', 'variable_id' => $var1->id]);
 
         // SUBVARIABLES para Internaciones
-        SubVariable::create(['descripcion' => 'Internaciones Médicas', 'variable_id' => $var2->id]);
-        SubVariable::create(['descripcion' => 'Internaciones Quirúrgicas', 'variable_id' => $var2->id]);
+        SubVariable::create(['descripcion' => 'Internaciones Médicas', 'estado' => 'activo', 'variable_id' => $var2->id]);
+        SubVariable::create(['descripcion' => 'Internaciones Quirúrgicas', 'estado' => 'activo', 'variable_id' => $var2->id]);
 
         // SUBVARIABLES para Vacunaciones
-        SubVariable::create(['descripcion' => 'BCG', 'variable_id' => $var3->id]);
-        SubVariable::create(['descripcion' => 'Pentavalente', 'variable_id' => $var3->id]);
-        SubVariable::create(['descripcion' => 'OPV', 'variable_id' => $var3->id]);
-        SubVariable::create(['descripcion' => 'SRP', 'variable_id' => $var3->id]);
+        SubVariable::create(['descripcion' => 'BCG', 'estado' => 'activo', 'variable_id' => $var3->id]);
+        SubVariable::create(['descripcion' => 'Pentavalente', 'estado' => 'activo', 'variable_id' => $var3->id]);
+        SubVariable::create(['descripcion' => 'OPV', 'estado' => 'activo', 'variable_id' => $var3->id]);
+        SubVariable::create(['descripcion' => 'SRP', 'estado' => 'activo', 'variable_id' => $var3->id]);
 
         // SUBVARIABLES para Partos
-        SubVariable::create(['descripcion' => 'Partos Vaginales', 'variable_id' => $var4->id]);
-        SubVariable::create(['descripcion' => 'Partos por Cesárea', 'variable_id' => $var4->id]);
+        SubVariable::create(['descripcion' => 'Partos Vaginales', 'estado' => 'activo', 'variable_id' => $var4->id]);
+        SubVariable::create(['descripcion' => 'Partos por Cesárea', 'estado' => 'activo', 'variable_id' => $var4->id]);
 
         // SUBVARIABLES para Atenciones Preventivas
-        SubVariable::create(['descripcion' => 'Control Prenatal', 'variable_id' => $var5->id]);
-        SubVariable::create(['descripcion' => 'Control Postnatal', 'variable_id' => $var5->id]);
-        SubVariable::create(['descripcion' => 'Planificación Familiar', 'variable_id' => $var5->id]);
+        SubVariable::create(['descripcion' => 'Control Prenatal', 'estado' => 'activo', 'variable_id' => $var5->id]);
+        SubVariable::create(['descripcion' => 'Control Postnatal', 'estado' => 'activo', 'variable_id' => $var5->id]);
+        SubVariable::create(['descripcion' => 'Planificación Familiar', 'estado' => 'activo', 'variable_id' => $var5->id]);
 
         // CABECERAS para Consultas Externas (raíces y anidadas)
         $cab1 = Cabecera::create([
             'descripcion' => 'Total Consultas',
             'variable_id' => $var1->id,
             'cabecera_id' => null, // raíz
+            'estado' => 'activo',
         ]);
         $cab1_1 = Cabecera::create([
             'descripcion' => 'Consultas por Sexo',
             'variable_id' => $var1->id,
             'cabecera_id' => $cab1->id,
+            'estado' => 'activo',
         ]);
         Cabecera::create([
             'descripcion' => 'Masculino',
             'variable_id' => $var1->id,
             'cabecera_id' => $cab1_1->id,
+            'estado' => 'activo',
         ]);
         Cabecera::create([
             'descripcion' => 'Femenino',
             'variable_id' => $var1->id,
             'cabecera_id' => $cab1_1->id,
+            'estado' => 'activo',
         ]);
 
         // CABECERAS para Internaciones
@@ -307,21 +311,25 @@ class DatabaseSeeder extends Seeder
             'descripcion' => 'Total Internaciones',
             'variable_id' => $var2->id,
             'cabecera_id' => null, // raíz
+            'estado' => 'activo',
         ]);
         $cab2_1 = Cabecera::create([
             'descripcion' => 'Internaciones por Sexo',
             'variable_id' => $var2->id,
             'cabecera_id' => $cab2->id,
+            'estado' => 'activo',
         ]);
         Cabecera::create([
             'descripcion' => 'Masculino',
             'variable_id' => $var2->id,
             'cabecera_id' => $cab2_1->id,
+            'estado' => 'activo',
         ]);
         Cabecera::create([
             'descripcion' => 'Femenino',
             'variable_id' => $var2->id,
             'cabecera_id' => $cab2_1->id,
+            'estado' => 'activo',
         ]);
 
         // CABECERAS para Vacunaciones (raíz)
@@ -329,6 +337,7 @@ class DatabaseSeeder extends Seeder
             'descripcion' => 'Total Vacunaciones',
             'variable_id' => $var3->id,
             'cabecera_id' => null, // raíz
+            'estado' => 'activo',
         ]);
 
         // FORMULARIOS para diferentes gestiones

@@ -23,23 +23,29 @@
 </button>
 
     <div class="table-responsive">
-        <table id="estsTable" class="table table-striped table-materio">
+        <table id="estsTable" class="table table-sm small table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Nombre</th>
                 <th>Municipio</th>
                 <th>Codigo</th>
                 <th>Gestion</th>
-                <th>Acciones</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
             @foreach($establecimientos as $establecimiento)
                 <tr>
-                    <td>{{ $establecimiento->descripcion }}</td>
-                    <td>{{ $municipios[$establecimiento->id_mun-1]->nombre }}</td>
-                    <td>{{ $establecimiento->codigo_est }}</td>
-                    <td>{{ $establecimiento->gestion }}</td>
+                    <td class="id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $establecimiento->id }}</strong>
+                        </div>
+                    </td>
+                    <td class="data">{{ $establecimiento->descripcion }}</td>
+                    <td class="data">{{ $municipios[$establecimiento->id_mun-1]->nombre }}</td>
+                    <td class="data">{{ $establecimiento->codigo_est }}</td>
+                    <td class="data">{{ $establecimiento->gestion }}</td>
                     <td>
                         <button type="button"
                                 class="btn btn-icon edit-est"

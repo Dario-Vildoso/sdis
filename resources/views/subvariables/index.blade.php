@@ -23,39 +23,70 @@
 </button>
 
     <div class="table-responsive">
-        <table id="dataTable" class="table table-striped table-materio">
+        <table id="dataTable" class="table table-sm small table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Descripcion</th> 
-                <th>variables</th>
-                <th>Acciones</th>
+                <th>Variable</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
-            @foreach($subvariables as $subvariable)
-                <tr class="variable-row" data-variable-id="{{ $subvariable->id }}" style="cursor: pointer;">
-                    <td>{{ $subvariable->descripcion }}</td>
-                    <td>{{ $subvariable->variable_descripcion }}</td>
-                    <td>
-                        <button type="button"
-                                class="btn btn-icon edit-data"
-                                data-id="{{ $subvariable->id }}"
-                                data-descripcion="{{ $subvariable->descripcion }}"
-                                data-variable-id="{{ $subvariable->variable_id }}"
-                                onclick="event.stopPropagation();">
-                            <i class="ri ri-pencil-line fs-4 bg-success"></i>
-                        </button>
-
-                        <form action="{{ route('subvariables.destroy', $subvariable) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-icon" type="submit"
-                                onclick="return confirm('¿Eliminar sub-variable?')">
-                                <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
+            @php
+                // Agrupar subvariables por variable_id
+                $subvariablesGrouped = $subvariables->groupBy('variable_id');
+                
+                // Array de colores para badges
+                $badgeColors = ['bg-label-primary', 'bg-label-success', 'bg-label-warning', 'bg-label-danger', 'bg-label-info', 'bg-label-secondary'];
+                $colorIndex = 0;
+                $variableColors = [];
+            @endphp
+            
+            @foreach($subvariablesGrouped as $variableId => $subs)
+                @php
+                    // Asignar color a esta variable si no lo tiene
+                    if (!isset($variableColors[$variableId])) {
+                        $variableColors[$variableId] = $badgeColors[$colorIndex % count($badgeColors)];
+                        $colorIndex++;
+                    }
+                    $color = $variableColors[$variableId];
+                    $variableDesc = $subs->first()->variable_descripcion;
+                @endphp
+                
+                <!-- Filas de subvariables -->
+                @foreach($subs as $subvariable)
+                    <tr class="variable-row" data-variable-id="{{ $subvariable->id }}">
+                        <td class="text-muted small id-cell">
+                            <div class="text-center d-flex align-items-center justify-content-center">
+                                <strong>{{ $subvariable->id }}</strong>
+                            </div>
+                        </td>
+                        <td class="ps-5 data">{{ $subvariable->descripcion }}</td>
+                        <td class="data">
+                            <span class="badge {{ $color }}">{{ $variableDesc }}</span>
+                        </td>
+                        <td>
+                            <button type="button"
+                                    class="btn btn-icon edit-data"
+                                    data-id="{{ $subvariable->id }}"
+                                    data-descripcion="{{ $subvariable->descripcion }}"
+                                    data-variable-id="{{ $subvariable->variable_id }}"
+                                    onclick="event.stopPropagation();">
+                                <i class="ri ri-pencil-line fs-4 bg-success"></i>
                             </button>
-                        </form>
-                    </td>
-                </tr>
+
+                            <form action="{{ route('subvariables.destroy', $subvariable) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button class="btn btn-icon" type="submit"
+                                    onclick="return confirm('¿Eliminar sub-variable?')">
+                                    <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
             @endforeach
             </tbody>
         </table>

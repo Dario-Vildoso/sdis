@@ -23,26 +23,95 @@
 </button>
 
     <div class="table-responsive">
-        <table id="dataTable" class="table table-striped table-materio">
+        <table id="dataTable" class="table small table-sm table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Descripcion</th> 
                 <th>Subvariables</th>
                 <th>Cabeceras</th>
-                <th>Acciones</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
-            <tbody>
+            <tbody class="table-border-bottom-0">
             @foreach($variables as $variable)
-                <tr class="variable-row" data-variable-id="{{ $variable->id }}" style="cursor: pointer;">
-                    <td>{{ $variable->descripcion }}</td>
-                    <td class="subvariables-cell" id="subvariables-{{ $variable->id }}">
-                        <span class="text-muted">Clic para cargar...</span>
+                <tr class="variable-row">
+                    <td class="text-muted small id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $variable->id }}</strong>
+                        </div>
                     </td>
-                    <td class="cabeceras-cell" id="cabeceras-{{ $variable->id }}">
-                        <span class="text-muted">Clic para cargar...</span>
+                    <td class="data">{{ $variable->descripcion }}</td>
+                    <td class="data">
+                        <span class="badge bg-label-info cursor-pointer" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#subvars-{{ $variable->id }}" 
+                        aria-expanded="false" 
+                        aria-controls="subvars-{{ $variable->id }}">
+                            {{ $variable->subvariables->count() }} subvariables  <i class="ri ri-arrow-down-s-fill"></i>
+                        </span>
+                        <div class="collapse mt-2" id="subvars-{{ $variable->id }}">
+                            <div class="p-2 bg-light rounded small">
+                                @forelse($variable->subvariables as $sub)
+                                    <div>• {{ $sub->descripcion }}</div>
+                                @empty
+                                    <div class="text-muted">Sin subvariables</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </td>
+                    <td class="data">
+                        <span class="badge bg-label-success cursor-pointer"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#cabs-{{ $variable->id }}"
+                        aria-expanded="false"
+                        aria-controls="cabs-{{ $variable->id }}">
+                            {{ $variable->cabeceras->count() }} cabeceras   <i class="ri ri-arrow-down-s-fill"></i>
+                        </span>
+                        <div class="collapse mt-2" id="cabs-{{ $variable->id }}">
+                            <div class="p-2 bg-light rounded small">
+                                @php
+                                    // Construir árbol de cabeceras
+                                    $cabecerasHijas = $variable->cabeceras->groupBy('cabecera_id');
+                                    
+                                    $renderTree = function($parentId = null, $level = 0) use (&$renderTree, $cabecerasHijas, $variable) {
+                                        $cabeceras = $cabecerasHijas->get($parentId) ?? collect();
+                                        $count = count($cabeceras);
+                                        
+                                        foreach ($cabeceras as $index => $cab) {
+                                            $isLast = ($index === $count - 1);
+                                            $prefix = '';
+                                            
+                                            // Crear prefijo tipo árbol
+                                            if ($level > 0) {
+                                                for ($i = 0; $i < $level - 1; $i++) {
+                                                    $prefix .= '│&nbsp;&nbsp;&nbsp;';
+                                                }
+                                                $prefix .= $isLast ? '└─ ' : '├─ ';
+                                            }
+                                            
+                                            echo '<div>' . $prefix . htmlspecialchars($cab->descripcion, ENT_QUOTES, 'UTF-8') . '</div>';
+                                            
+                                            // Renderizar recursivamente hijos
+                                            $renderTree($cab->id, $level + 1);
+                                        }
+                                    };
+                                    
+                                    $renderTree();
+                                @endphp
+                                @if($variable->cabeceras->isEmpty())
+                                    <div class="text-muted">Sin cabeceras</div>
+                                @endif
+                            </div>
+                        </div>
                     </td>
                     <td>
+                        <a href="{{ route('variables.tabla', $variable) }}" 
+                           class="btn btn-icon" 
+                           title="Ver tabla">
+                            <i class="ri ri-table-2 fs-4 bg-info text-white rounded-2" style="padding: 6px;"></i>
+                        </a>
+
                         <button type="button"
                                 class="btn btn-icon edit-data"
                                 data-id="{{ $variable->id }}"
@@ -94,56 +163,7 @@
     });
 </script>
 
-<script>
-    // Handle row click to load subvariables and cabeceras
-    $(document).on('click', '.variable-row', function () {
-        var variableId = $(this).data('variable-id');
-        var subvariablesCell = $('#subvariables-' + variableId);
-        var cabecerasCell = $('#cabeceras-' + variableId);
 
-        // Load subvariables
-        $.ajax({
-            url: "{{ url('variables') }}/" + variableId + "/subvariables",
-            type: 'GET',
-            success: function (res) {
-                if (res.subvariables.length > 0) {
-                    var html = '<ul class="mb-0 list-unstyled">';
-                    res.subvariables.forEach(function (subvar) {
-                        html += '<li><small>' + subvar.descripcion + '</small></li>';
-                    });
-                    html += '</ul>';
-                    subvariablesCell.html(html);
-                } else {
-                    subvariablesCell.html('<span class="text-muted">Sin subvariables</span>');
-                }
-            },
-            error: function () {
-                subvariablesCell.html('<span class="text-danger">Error al cargar</span>');
-            }
-        });
-
-        // Load cabeceras
-        $.ajax({
-            url: "{{ url('variables') }}/" + variableId + "/cabeceras",
-            type: 'GET',
-            success: function (res) {
-                if (res.cabeceras.length > 0) {
-                    var html = '<ul class="mb-0 list-unstyled">';
-                    res.cabeceras.forEach(function (cabecera) {
-                        html += '<li><small>' + cabecera.descripcion + '</small></li>';
-                    });
-                    html += '</ul>';
-                    cabecerasCell.html(html);
-                } else {
-                    cabecerasCell.html('<span class="text-muted">Sin cabeceras</span>');
-                }
-            },
-            error: function () {
-                cabecerasCell.html('<span class="text-danger">Error al cargar</span>');
-            }
-        });
-    });
-</script>
 
 <!-- Modal: Crear / Editar Formulario -->
 <div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModalLabel" aria-hidden="true">

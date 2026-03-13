@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('descripcion');
             $table->unsignedBigInteger('variable_id');
-            $table->foreign('variable_id')->references('id')->on('variables');
+            $table->foreign('variable_id')->references('id')->on('variables')->on_delete('cascade');
+            $table->string('estado');
             // $table->integer('orden');
             $table->timestamps();
         });

@@ -23,28 +23,40 @@
 </button>
 
     <div class="table-responsive">
-        <table id="dataTable" class="table table-striped table-materio">
+        <table id="dataTable" class="table table-sm small table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Nombre</th>
                 <th>Gestion</th>
                 <th>Fecha de Creacion</th>
-                <th>Acciones</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
             @foreach($formularios as $formulario)
                 <tr>
-                    <td>{{ $formulario->nombre }}</td>
-                    <td>{{ $gestiones->where('id', $formulario->gestion_id)->first()->nombre ?? 'Sin gestión' }}</td>
-                    <td>{{ $formulario->created_at->format('d/m/Y') }}</td>
+                    <td class="id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $formulario->id }}</strong>
+                        </div>
+                    </td>
+                    <td class="data">{{ $formulario->nombre }}</td>
+                    <td class="data">{{ $gestiones->where('id', $formulario->gestion_id)->first()->nombre ?? 'Sin gestión' }}</td>
+                    <td class="data">{{ $formulario->created_at->format('d/m/Y') }}</td>
                     <td>
-                        <button type="button"
+                        <!-- <button type="button"
                                 class="btn btn-icon edit-data"
                                 data-id="{{ $formulario->id }}"
                                 data-nombre="{{ $formulario->nombre }}"
                                 data-gestion_id="{{ $formulario->gestion_id }}">
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
+                        </button> -->
+                        <button type="button"
+                                class="btn btn-icon"> 
+                            <a href="{{ route('formularios.asignarVariables', $formulario) }}" class="btn btn-icon">
+                                <i class="ri ri-pencil-line fs-4 bg-success"></i>
+                            </a>
                         </button>
 
                         <form action="{{ route('formularios.destroy', $formulario) }}" method="POST" class="d-inline">
@@ -55,6 +67,11 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
+                        <button class="btn btn-icon">
+                            <a href="{{ route('formularios.show', $formulario) }}" class="btn btn-icon">
+                                <i class="ri ri-eye-line fs-4 bg-info"></i>
+                            </a>
+                        </button>
                     </td>
                 </tr>
             @endforeach

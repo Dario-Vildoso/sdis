@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('descripcion');
             $table->unsignedBigInteger('variable_id');
-            $table->foreign('variable_id')->references('id')->on('variables');
+            $table->foreign('variable_id')->references('id')->on('variables')->onDelete('cascade');
             $table->unsignedBigInteger('cabecera_id')->nullable();
-            $table->foreign('cabecera_id')->references('id')->on('cabeceras');
+            $table->foreign('cabecera_id')->references('id')->on('cabeceras')->onDelete('cascade');
+            $table->string('estado');
             // $table->integer('orden');
             // $table->boolean('es_hoja');
             $table->timestamps();

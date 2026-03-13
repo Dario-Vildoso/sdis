@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/custom.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"> -->
 
         <!-- jQuery --> 
     <script src="{{url('plugins/jquery/jquery.min.js')}}"></script>
@@ -54,22 +54,91 @@
             border-bottom: 1px solid #d9dee3;
             padding: 6px 12px;
         }
-
-        /* Tabla */
-        .table.dataTable {
-            border-collapse: separate !important;
-            border-spacing: 0 4px;
+        
+        .table.table-materio thead th.id-header {
+            background: transparent !important;
+            border: none !important;
+            width: 10px;
         }
 
-        /* Filas estilo card */
-        .table.dataTable tbody tr {
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(67, 89, 113, 0.12);
-            border-radius: 8px;
+        .table.table-materio thead th.actions {
+            background: #ff4d00 !important;
+            width: 120px;
+        }
+        
+        .table.table-materio tbody td.data {
+            background: linear-gradient(90deg, #d9dee3 0%, #ffffff 30%);
+        }
+        
+        .table.table-materio tbody td.id-cell{
+            padding: 0px 0px 0px 10px;
+        }
+        
+        .table.table-materio thead th.transparent-cell{
+            background: transparent !important;
+            border: none !important;
+            display: flex;
+            width: fit-content;
+            padding: 10px 10px 10px 0px;
+        }
+        
+        .table.table-materio tbody td.id-cell div{
+            /* width: 40px;
+            height: 40px; */
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            width: 100%;
+            height: 40px;
+            border-radius: 50% 0 0 50%;
+            font-size: 12px;
+            color: #ffffff;
+            background: linear-gradient(90deg, #ffc107, #ff9800);
+            font-weight: 500;
+        }
+
+        .table.table-materio tbody td.button-cell-left div,
+        .table.table-materio thead th.button-cell-left div{
+            /* width: 40px;
+            height: 40px; */
+            padding-left: 10px;
+            text-align: left;
+            justify-content: left;
+            align-items: center;
+            display: flex;
+            width: 40px;
+            height: 40px;
+            border-radius: 40px 0 0 40px;
+            font-size: 12px;
+            color: #ffffff;
+            background: linear-gradient(90deg, #ffc107, #ff9800);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .table.table-materio tbody td.button-cell-right div,
+        .table.table-materio thead th.button-cell-right div{
+            /* width: 40px;
+            height: 40px; */
+            
+            padding-right: 10px;
+            text-align: right;
+            justify-content: right;
+            align-items: center;
+            display: flex;
+            width: 40px;
+            height: 40px;
+            border-radius: 0% 40px 40px 0%;
+            font-size: 12px;
+            color: #ffffff;
+            background: linear-gradient(90deg, #ffc107, #ff9800);
+            font-weight: 500;
+            cursor: pointer;
         }
 
         /* Hover */
-        .table.dataTable tbody tr:hover {
+        .table.table-materio tbody tr:hover {
             background-color: #f5f5f9;
         }
 
@@ -91,11 +160,12 @@
         .btn-icon:hover i {
             transform: scale(1.3);
         }
-        .table-materio thead th {
-            background-color: #ffc107 !important;
+        table.table-materio thead th {
+            background: linear-gradient(90deg, #ff9800, #ffc107);
+            border-radius: 20px 20px 0 0;
             color: #fff;
             font-weight: 600;
-            border-bottom: none;
+            border: 2px solid white;
         }
     </style>
 </head>

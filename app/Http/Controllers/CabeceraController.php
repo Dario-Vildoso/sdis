@@ -41,6 +41,7 @@ class CabeceraController extends Controller
         $cabecera->descripcion = $request->descripcion;
         $cabecera->variable_id = $request->variable_id;
         $cabecera->cabecera_id = $request->cabecera_id;
+        $cabecera->estado = 'activo';
         $cabecera->save();
 
         return redirect()->route('cabeceras.index')->with('success', 'Cabecera creada exitosamente.');

@@ -11,6 +11,7 @@ use App\Http\Controllers\SubVariableController;
 use App\Http\Controllers\CabeceraController;
 use App\Http\Controllers\DatoController;
 use App\Http\Controllers\GestionController;
+use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
 use League\CommonMark\Extension\CommonMark\Parser\Inline\EscapableParser;
 
@@ -30,6 +31,10 @@ Route::middleware('auth')->group(function () {
 });
 Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class);
+    Route::resource('roles', RoleController::class);
+    Route::post('roles/{role}/assign-user', [RoleController::class, 'assignToUser'])->name('roles.assignToUser');
+    Route::delete('roles/{role}/remove-user', [RoleController::class, 'removeFromUser'])->name('roles.removeFromUser');
+    
     Route::resource('establecimientos', EstablecimientoController::class);
     Route::resource('gestiones', GestionController::class);
     Route::resource('formularios', FormularioController::class);
@@ -40,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('variables/{variable}/cabeceras', [VariableController::class, 'getCabeceras'])->name('variables.cabeceras');
     Route::resource('subvariables', SubVariableController::class);
     Route::resource('cabeceras', CabeceraController::class);
+    Route::get('formulario/{formulario}/asignar-variables', [FormularioController::class, 'asignarVariables'])->name('formularios.asignarVariables');
+    Route::get('variables/{variable}/tabla', [VariableController::class, 'tabla'])->name('variables.tabla');
+    Route::post('variables/{variable}/tabla', [VariableController::class, 'guardarTabla'])->name('variables.guardarTabla');
 });
 
 require __DIR__.'/auth.php';

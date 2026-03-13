@@ -37,17 +37,23 @@
         <table id="dataTable" class="table table-striped table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Formulario</th>
                 <th>Descripcion</th>
                 <th>Fecha de Inicio</th>
                 <th>Fecha de Fin</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
             @foreach($periodos as $periodo)
                 <tr>
+                    <td class="id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $periodo->id }}</strong>
+                        </div>
+                    </td>
                     <td>{{ $formularios->where('id', $periodo->formulario_id)->first()->nombre ?? 'Sin formulario' }} - {{ $gestiones->where('id', $formularios->where('id', $periodo->formulario_id)->first()->gestion_id ?? 0)->first()->nombre ?? 'Sin gestión' }}</td>
                     <td>{{ $periodo->descripcion }}</td>
                     <td>{{ $periodo->fecha_inicio }}</td>

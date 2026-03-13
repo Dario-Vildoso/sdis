@@ -23,17 +23,23 @@
 </button>
 
     <div class="table-responsive">
-        <table id="dataTable" class="table table-striped table-materio">
+        <table id="dataTable" class="table table-sm small table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Año</th>
-                <th>Acciones</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
             @foreach($gestiones as $gestion)
                 <tr>
-                    <td>{{ $gestion->nombre }}</td>
+                    <td class="id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $gestion->id }}</strong>
+                        </div>
+                    </td>
+                    <td class="data">{{ $gestion->nombre }}</td>
                     <td>
                         <button type="button"
                                 class="btn btn-icon edit-data"

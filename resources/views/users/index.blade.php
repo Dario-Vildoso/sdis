@@ -22,19 +22,35 @@
 </button>
 
     <div class="table-responsive">
-        <table id="usersTable" class="table table-striped table-materio">
+        <table id="usersTable" class="table table-sm small table-materio">
             <thead>
             <tr>
+                <th class="id-header"></th>
                 <th>Nombre</th>
                 <th>Email</th>
-                <th>Acciones</th>
+                <th>Roles</th>
+                <th class="actions">Acciones</th>
             </tr>
             </thead>
             <tbody>
             @foreach($users as $user)
                 <tr>
-                    <td>{{ $user->name }}</td>
-                    <td>{{ $user->email }}</td>
+                    <td class="id-cell">
+                        <div class="text-center d-flex align-items-center justify-content-center">
+                            <strong>{{ $user->id }}</strong>
+                        </div>
+                    </td>
+                    <td class="data">{{ $user->name }}</td>
+                    <td class="data">{{ $user->email }}</td>
+                    <td class="data">
+                        @if($user->roles && $user->roles->count() > 0)
+                            @foreach($user->roles as $role)
+                                <span class="badge bg-info me-1 small">{{ $role->name }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-muted small">Sin roles</span>
+                        @endif
+                    </td>
                     <td>
                         <button type="button"
                                 class="btn btn-icon edit-user"
