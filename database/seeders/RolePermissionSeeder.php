@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\User;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -63,51 +64,86 @@ class RolePermissionSeeder extends Seeder
         // Crear roles
         $admin = Role::firstOrCreate(
             ['slug' => 'admin'],
-            ['name' => 'Administrador', 'description' => 'Rol con acceso total al sistema']
+            ['name' => 'Administrador', 'description' => 'Gestion copleta de usuarios y formularios']
         );
 
-        $editor = Role::firstOrCreate(
-            ['slug' => 'editor'],
-            ['name' => 'Editor', 'description' => 'Puede crear y editar contenido']
-        );
-
-        $viewer = Role::firstOrCreate(
-            ['slug' => 'viewer'],
-            ['name' => 'Visualizador', 'description' => 'Solo puede ver contenido']
+        $reports = Role::firstOrCreate(
+            ['slug' => 'reportes'],
+            ['name' => 'Reportes', 'description' => 'Envio de datos y/o gestion de reportes']
         );
 
         // Asignar permisos a roles
         $allPermissions = Permission::all()->pluck('id')->toArray();
         $admin->permissions()->sync($allPermissions);
 
-        $editorPermissions = Permission::whereIn('slug', [
+        $reportsPermissions = Permission::whereIn('slug', [
             'users.view',
             'formularios.view', 'formularios.create', 'formularios.edit',
             'gestiones.view', 'gestiones.create', 'gestiones.edit',
             'variables.view', 'variables.create', 'variables.edit',
             'datos.view', 'datos.create', 'datos.edit',
         ])->pluck('id')->toArray();
-        $editor->permissions()->sync($editorPermissions);
+        $reports->permissions()->sync($reportsPermissions);
 
-        $viewerPermissions = Permission::whereIn('slug', [
-            'users.view',
-            'formularios.view',
-            'gestiones.view',
-            'variables.view',
-            'datos.view',
-        ])->pluck('id')->toArray();
-        $viewer->permissions()->sync($viewerPermissions);
+        // Crear usuario administrador
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Administrador',
+                'password' => bcrypt('admin1234'),
+            ]
+        );
 
-        // Asignar rol admin a los dos primeros usuarios si existen
-        try {
-            $userModel = app()->make(\App\Models\User::class);
-            $users = \App\Models\User::orderBy('id')->take(2)->get();
-            foreach ($users as $u) {
-                // usar slug para asignar
-                $u->assignRole('admin');
-            }
-        } catch (\Throwable $e) {
-            // Si la clase User no existe o no hay conexión, ignorar silenciosamente
-        }
+        // Asignar rol
+        $adminUser->assignRole('admin');
+
+
+        // Crear usuario de reportes
+        $establecimietoUser = User::firstOrCreate(
+            ['email' => 'Establecimiento@example.com'],
+            [
+                'name' => 'Establecimiento',
+                'password' => bcrypt('establecimiento1234'),
+            ]
+        );
+
+        $establecimietoUser->assignRole('reportes');
+
+        // Crear usuario de reportes
+        $municipioUser = User::firstOrCreate(
+            ['email' => 'Municipio@example.com'],
+            [
+                'name' => 'Municipio',
+                'password' => bcrypt('municipio1234'),
+            ]
+        );
+
+        $municipioUser->assignRole('reportes');
+
+        // Crear usuario de reportes
+        $redUser = User::firstOrCreate(
+            ['email' => 'red@example.com'],
+            [
+                'name' => 'Red',
+                'password' => bcrypt('redes1234'),
+            ]
+        );
+
+        $redUser->assignRole('reportes');
+
+        $establecimietoUser->alcances()->create([
+            'tipo' => 'establecimiento',
+            'alcance_id' => 1
+        ]);
+
+        $municipioUser->alcances()->create([
+            'tipo' => 'municipio',
+            'alcance_id' => 1
+        ]);
+
+        $redUser->alcances()->create([
+            'tipo' => 'red',
+            'alcance_id' => 1
+        ]);
     }
 }

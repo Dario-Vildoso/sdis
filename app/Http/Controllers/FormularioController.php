@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Formulario;
 use App\Models\Gestion;
 use App\Models\Asignacion;
+use App\Models\Variable;
+use App\Models\Periodo;
+use App\Models\Dato;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class FormularioController extends Controller
 {
@@ -14,7 +18,7 @@ class FormularioController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+    {   
         $formularios = Formulario::all();
         $gestiones = Gestion::all();
         return view('formularios.index', compact('formularios', 'gestiones'));
@@ -45,6 +49,60 @@ class FormularioController extends Controller
         $formulario->save();
         return redirect()->route('formularios.index')->with('success', 'Formulario creado exitosamente.');
     }
+    public function menu()
+    {
+        $formularios = Formulario::all();
+        $gestiones = Gestion::all();
+        return view('formularios.menu', compact('formularios', 'gestiones'));
+    }
+
+    public function cargarPeriodo(Formulario $formulario, Periodo $periodo)
+    {
+        if (now() > $periodo->fecha_fin || now() < $periodo->fecha_inicio) {
+            return redirect()->route('formularios.menu')->with('error', 'El periodo no está activo.');
+        }
+        $user = Auth::user();
+
+        $formulario = Formulario::with(['variables.subvariables', 'variables.cabeceras' => function ($query) {
+            $query->whereNull('cabecera_id')->with('hijos');
+        }])->findOrFail($formulario->id);
+        $formulario->variables->each(function ($variable) {
+            $variable->total_leaf_columns = $variable->cabeceras->sum(
+                fn($c) => $this->countLeaves($c)
+            );
+        });
+        $datos = Dato::where('periodo_id', $periodo->id)->where('establecimiento_id', $user->alcances()->first()->alcance_id)->get();
+        return view('formularios.periodo', compact('formulario', 'user', 'periodo', 'datos'));
+    }
+
+    public function storeData(Request $request, Formulario $formulario, Periodo $periodo)
+    {
+        $user = Auth::user();
+        $establecimiento_id = $user->alcances()->first()->alcance_id;
+        $datos = $request->datos;
+        $datos = json_decode($datos, true);
+        foreach ($datos as $dato) {
+
+            Dato::updateOrCreate(
+                [
+                    'cabecera_id' => $dato['cabecera_id'],
+                    'subvariable_id' => $dato['subvariable_id'],
+                    'periodo_id' => $periodo->id,
+                    'establecimiento_id' => $establecimiento_id,
+                ],
+                [
+                    // ✏️ Valor a actualizar
+                    'valor' => $dato['valor'],
+                    'fecha' => date('Y-m-d'),
+                    'hora' => date('H:i:s'),
+                ]
+            );
+        }
+
+        return response()->json([
+            'message' => 'Datos guardados correctamente'
+        ]);
+    }
 
     public function asignarVariables(Formulario $formulario)
     {
@@ -56,7 +114,34 @@ class FormularioController extends Controller
                 fn($c) => $this->countLeaves($c)
             );
         });
-        return view('formularios.assignments', compact('formulario'));
+        $variables = Variable::all();
+        return view('formularios.assignments', compact('formulario', 'variables'));
+    }
+
+    public function addVariable(Request $request)
+    {
+        $formulario = Formulario::findOrFail($request->formulario_id);
+        $variable = Variable::findOrFail($request->variable_id);
+        $asignacion = new Asignacion();
+        $asignacion->formulario_id = $formulario->id;
+        $asignacion->variable_id = $variable->id;
+        $asignacion->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Variable asignada exitosamente.',
+        ]);
+    }
+
+    public function removeVariable(Request $request)
+    {
+        $formulario = Formulario::findOrFail($request->formulario_id);
+        $variable = Variable::findOrFail($request->variable_id);
+        $asignacion = Asignacion::where('formulario_id', $formulario->id)->where('variable_id', $variable->id)->first();
+        $asignacion->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Variable desasignada exitosamente.',
+        ]);
     }
 
     private function countLeaves($cabecera)

@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asignacion;
+use App\Models\Variable;
+use App\Models\SubVariable;
+use App\Models\Cabecera;
+use App\Models\Formulario;
 use Illuminate\Http\Request;
 
 class AsignacionController extends Controller
@@ -29,6 +33,35 @@ class AsignacionController extends Controller
     public function store(Request $request)
     {
         //
+    }
+
+    public function createVariableForm(Request $request, formulario $form)
+    {
+        request()->validate([
+            'descripcion' => 'required|string|max:255',
+        ]);
+        $variable = new Variable();
+        $variable->descripcion = $request->descripcion;
+        $variable->save();
+        $subvariable = new SubVariable();
+        $subvariable->descripcion = 'Nueva subvariable';
+        $subvariable->variable_id = $variable->id;
+        $subvariable->estado = 'activo';
+        $subvariable->save();
+        $cabecera = new Cabecera();
+        $cabecera->descripcion = 'Nueva cabecera';
+        $cabecera->variable_id = $variable->id;
+        $cabecera->cabecera_id = null;
+        $cabecera->estado = 'activo';
+        $cabecera->save();
+        $asignacion = new Asignacion();
+        $asignacion->formulario_id = $form->id;
+        $asignacion->variable_id = $variable->id;
+        $asignacion->save();
+        return response()->json([
+            'success' => true,
+            'message' => 'Variable asignada exitosamente.',
+        ]);
     }
 
     /**

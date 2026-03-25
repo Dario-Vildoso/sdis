@@ -167,6 +167,21 @@
             font-weight: 600;
             border: 2px solid white;
         }
+        [contenteditable="true"] {
+            cursor: text;
+            outline: 2px dashed transparent;
+            transition: all 0.2s ease;
+        }
+
+        [contenteditable="true"]:hover {
+            background-color: #fff3cd;
+            outline: 2px dashed #ffc107;
+        }
+
+        [contenteditable="true"]:focus {
+            background-color: #e7f3ff2a;
+            outline: 2px solid #df5307;
+        }
     </style>
 </head>
 @stack('scripts')

@@ -96,13 +96,60 @@
                     </a>
                 </li>
                 <li class="menu-item {{ request()->routeIs('formularios.*') ? 'active' : '' }}">
-                    <a href="{{ route('formularios.index') }}" class="menu-link">
+                    <a href="{{ route('formularios.menu') }}" class="menu-link">
                         <i class="menu-icon ri {{ request()->routeIs('formularios.*') ? 'ri-download-fill' : 'ri-download-line' }} bg-warning"></i>
                         <div>Exportar</div>
                     </a>
                 </li>
             </ul>
         </li>
-        
+------------------------------------------
+        <li class="menu-item {{ request()->routeIs('') ? 'open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons ri {{ request()->routeIs('formularios.*') ? 'ri-survey-fill' : 'ri-survey-line' }} bg-warning"></i>
+                <div>Formularios Activos</div>  
+            </a>
+
+            <ul class="menu-sub">
+                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
+                    <a href="{{ route('formularios.menu') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('users.*') ? 'ri-file-edit-fill' : 'ri-file-edit-line' }} bg-warning"></i>
+                        <div>Formularios Actuales</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
+                    <a href="{{ route('roles.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-alert-fill' : 'ri-alert-line' }} bg-warning"></i>
+                        <div>Pendientes</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
+                    <a href="{{ route('roles.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-history-fill' : 'ri-history-line' }} bg-warning"></i>
+                        <div>Historial</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="menu-item {{ request()->routeIs(['variables.*', 'subvariables.*', 'cabeceras.*', 'periodos.*', 'gestiones.*']) ? 'open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons ri {{ request()->routeIs(['variables.*', 'subvariables.*', 'cabeceras.*', 'periodos.*', 'gestiones.*']) ? 'ri-settings-3-fill' : 'ri-settings-3-line' }} bg-warning"></i>
+                <div>Reportes Personales</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ request()->routeIs('gestiones.*') ? 'active' : '' }}">
+                    <a href="{{ route('gestiones.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('gestiones.*') ? 'ri-file-list-fill' : 'ri-file-list-line' }} bg-warning"></i>
+                        <div>Datos Ingresados</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('variables.*') ? 'active' : '' }}">
+                    <a href="{{ route('variables.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('variables.*') ? 'ri-file-chart-fill' : 'ri-file-chart-line' }} bg-warning"></i>
+                        <div>Resumen Mensual</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
     </ul>
 </aside>

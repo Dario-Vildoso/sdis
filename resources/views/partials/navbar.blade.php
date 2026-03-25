@@ -1,3 +1,8 @@
+@php
+    use App\Models\Red;
+    use App\Models\Municipio;
+    use App\Models\Establecimiento;
+@endphp
 <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-menu-theme">
 
     <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
@@ -16,7 +21,21 @@
         </div>
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">
-
+            {{Auth::user()->name}}
+            @if (Auth::user()->alcances()->count() > 0)
+            -
+                @switch(Auth::user()->alcances()->first()->tipo)
+                    @case('red')
+                        {{ Red::find(Auth::user()->alcances()->first()->alcance_id)->nombre }}
+                        @break
+                    @case('municipio')
+                        {{ Municipio::find(Auth::user()->alcances()->first()->alcance_id)->nombre }}
+                        @break
+                    @case('establecimiento')
+                        {{ Establecimiento::find(Auth::user()->alcances()->first()->alcance_id)->descripcion }}
+                        @break
+                @endswitch
+            @endif
             <!-- Usuario -->
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
@@ -28,14 +47,14 @@
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="#">
-                            <i class="bx bx-user me-2"></i>
-                            <span>Mi perfil</span>
+                            <i class="ri ri-dashboard-fill me-2"></i>
+                            <span>Inicio</span>
                         </a>
                     </li>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="dropdown-item">
-                            <i class="bx bx-log-out me-2"></i>
+                            <i class="ri ri-logout-box-fill me-2"></i>
                             Cerrar sesión
                         </button>
                     </form>

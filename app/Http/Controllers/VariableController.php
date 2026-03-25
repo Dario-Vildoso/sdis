@@ -43,12 +43,12 @@ class VariableController extends Controller
         $variable->updated_at = Carbon::now();
         $variable->save();
         $subvariable = new SubVariable();
-        $subvariable->descripcion = $request->descripcion;
+        $subvariable->descripcion = 'Nueva subvariable';
         $subvariable->variable_id = $variable->id;
         $subvariable->estado = 'activo';
         $subvariable->save();
         $cabecera = new Cabecera();
-        $cabecera->descripcion = $request->descripcion;
+        $cabecera->descripcion = 'Nueva cabecera';
         $cabecera->variable_id = $variable->id;
         $cabecera->cabecera_id = null;
         $cabecera->estado = 'activo';

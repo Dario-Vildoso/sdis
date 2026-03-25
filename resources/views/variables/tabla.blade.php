@@ -19,13 +19,19 @@
 
 <div class="mb-3 d-flex justify-content-between align-items-center">
     <div>
-        <a href="{{ route('variables.index') }}" class="btn btn-secondary btn-sm" title="Volver">
-            <i class="ri fs-3 ri-arrow-left-line"></i> <span style="font-size: large;">&nbsp;Volver</span>
+        @if (request()->input('form'))
+        <a href="{{ route('formularios.asignarVariables', request()->input('form')) }}" class="btn btn-secondary btn-sm" title="Volver">
+            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
         </a>
+        @else
+        <a href="{{ route('variables.index') }}" class="btn btn-secondary btn-sm" title="Volver">
+            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
+        </a>
+        @endif
     </div>
     <div>
         <button type="button" class="btn btn-success btn-sm d-flex" id="btnGuardarCambios" title="Guardar todos los cambios">
-            <i class="ri fs-3 ri-save-line"></i> <span style="font-size: large;">&nbsp;Guardar</span>
+            <i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>
         </button>
     </div>
 </div>
@@ -113,7 +119,7 @@ $rows = $buildRows($variable->cabeceras);
                 <th class="text-muted bg-secondary text-white button-cell-right transparent-cell" 
                     title="Agregar cabecera" 
                     data-level="0">
-                    <div id="btnAdd0" style="background: linear-gradient(90deg, #018328, #05c63f)"
+                    <div id="btnAdd0" style="background: linear-gradient(90deg, #018328, #05c63f); z-index: 2; position: absolute;"
                         onmouseover="this.style.background='linear-gradient(90deg, #018328, #1eef5d )'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
                         onmouseout="this.style.background='linear-gradient(90deg, #018328, #05c63f)'; this.style.width='40px'; this.style.transition='all 0.2s ease'"
                         data-bs-toggle="popover"
@@ -837,22 +843,6 @@ $rows = $buildRows($variable->cabeceras);
 </script>
 
 <style>
-    [contenteditable="true"] {
-        cursor: text;
-        outline: 2px dashed transparent;
-        transition: all 0.2s ease;
-    }
-
-    [contenteditable="true"]:hover {
-        background-color: #fff3cd;
-        outline: 2px dashed #ffc107;
-    }
-
-    [contenteditable="true"]:focus {
-        background-color: #e7f3ff2a;
-        outline: 2px solid #df5307;
-    }
-
     .tabla-editable td.data {
         min-height: 2rem;
     }
@@ -872,16 +862,6 @@ $rows = $buildRows($variable->cabeceras);
         opacity: 0.5;
     }
 
-    .editable-titulo:hover {
-        background-color: #fff3cd;
-        border-radius: 4px;
-    }
-
-    .editable-titulo:focus {
-        background-color: #0080ff;
-        border-radius: 4px;
-        outline: 2px solid #0d6efd;
-    }
     #tablaVariable .cabecera-header{
         padding: 15px 5px;
     }

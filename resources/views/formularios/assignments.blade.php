@@ -4,18 +4,6 @@
 
 @section('content')
 
-@if(session('success'))
-    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-    </div>
-
-    <script>
-        setTimeout(function() {
-            var alert = new bootstrap.Alert(document.getElementById('successAlert'));
-            alert.close();
-        }, 3000);
-    </script>
-@endif
 
 @php
 
@@ -36,6 +24,7 @@ function maxDepth($cabeceras) {
         return maxDepth($c->hijos);
     });
 }
+$currVars = [];
 
 @endphp
 
@@ -46,6 +35,7 @@ function maxDepth($cabeceras) {
 @php
     $niveles = maxDepth($variable->cabeceras);
     $rows = [];
+    $currVars[] = $variable->id;
 @endphp
 
 @php
@@ -67,106 +57,130 @@ $buildRows = function ($cabeceras, $nivel = 0, &$rows = []) use (&$buildRows) {
 $rows = $buildRows($variable->cabeceras);
 
 @endphp
-
-<div class="d-flex justify-content-end">
+<div class="containerTabla" data-variable-id="{{ $variable->id }}">
+<div class="d-flex justify-content-end buttons">
 
     <div class="btn-group btn-group-sm">
-        <button class="btn btn-warning edit-variable"
+        <a href="{{ route('variables.tabla', ['variable' => $variable->id, 'form' => $formulario->id]) }}" class="btn btn-warning edit-variable"
             data-id="{{ $variable->id }}">
             <i class="ri ri-edit-fill"></i>
-        </button>
-
+        </a>
         <button class="btn btn-danger delete-variable"
             data-id="{{ $variable->id }}">
             <i class="ri ri-delete-bin-fill"></i>
         </button>
     </div>  
 </div>
+<div class="table-responsive">
+
     <table class="table table-sm small table-materio mb-5">
-
+        
         <thead>
-
+            
             {{-- Primera fila: Variable + primer nivel --}}
             <tr>
-                <th rowspan="{{ $niveles }}"
-                    class="text-center align-middle text-white variable-cell"
-                    style="width: 50%">
-                    {{ $variable->descripcion }}
-                </th>
-
+                <th rowspan="{{ $niveles - 1 }}"
+                class="text-center align-middle text-white variable-cell"
+                style="width: 33%">
+                {{ $variable->descripcion }}
+            </th>
+            
                 @foreach($rows[0] ?? [] as $cabecera)
-                    <th colspan="{{ countLeaves($cabecera) }}"
-                        @if($cabecera->hijos->isEmpty())
-                            
-                        @endif
+                <th colspan="{{ countLeaves($cabecera) }}"
                         class="text-center bg-secondary text-white cabecera-cell"
                         style="background: {{ $loop->even ? '#9d9fa3 !important' : '#9d9fa3 !important' }}">
                         {{ $cabecera->descripcion }}
                     </th>
-                @endforeach
-            </tr>
-
-            {{-- Niveles siguientes --}}
+                    @endforeach
+                </tr>
+                
+                {{-- Niveles siguientes --}}
             @for($i = 1; $i < $niveles; $i++)
-                <tr>
-                    @foreach($rows[$i] ?? [] as $cabecera)
-
+            <tr>
+                @if ( $i == $niveles - 1 )
+                @php
+                    $rowlenght = count($rows[$i]);
+                    $descs = [];
+                        foreach ($rows[$i] ?? [] as $cabecera) {
+                            $descs[] = $cabecera->descripcion;
+                        }
+                    $uniqueDescs = array_unique($descs);
+                    $vallength = count($uniqueDescs);
+                @endphp
+                @if ($vallength < $rowlenght)
+                <th rowspan="{{ $niveles - $i }}"
+                    class="text-center variable-cell"
+                    style="border-radius: 0 0 0 0; padding: 8px 10px; border-top: 1px solid white;"
+                    >
+                    {{ implode(', ', array_unique($descs)) }}
+                </th>
+                @else
+                <th rowspan="{{ $niveles - $i }}"
+                    class="text-center variable-cell"
+                    style="border-radius: 0 0 0 0; padding: 8px 10px;"
+                    >
+                    
+                </th>
+                @endif
+                @endif
+                @foreach($rows[$i] ?? [] as $cabecera)
                         @php
                             $hue = 213 - ($i * 3);   
                             $saturation = 10;
                             $lightness = 82 - ($i * 5);
                         @endphp
                         <!-- hsl(213, 30%, 32%) -->
-                        @if($cabecera->hijos->isEmpty())
-                            <th rowspan="{{ $niveles - $i }}"
-                                class="text-center subcabecera-cell"
-                                style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
-                                >
-                                {{ $cabecera->descripcion }}
-                            </th>
+                        @if($cabecera->hijos->isEmpty() && $vallength < $rowlenght)
+                        <th rowspan="{{ $niveles - $i }}"
+                        class="text-center subcabecera-cell"
+                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                        >
+                        {{ $cabecera->descripcion[0] }}
+                    </th>
                         @else
-                            <th colspan="{{ countLeaves($cabecera) }}"
-                                class="text-center subcabecera-cell"
-                                style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
-                                >
-                                {{ $cabecera->descripcion }}
-                            </th>
-                        @endif
+                        <th colspan="{{ countLeaves($cabecera) }}"
+                        class="text-center subcabecera-cell"
+                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                        >
+                        {{ $cabecera->descripcion }}
+                    </th>
+                    @endif
 
-                    @endforeach
+                @endforeach
                 </tr>
             @endfor
-
+            
         </thead>
-
+        
         <tbody>
-
+            
             @foreach($variable->subvariables as $subvariable)
-
-                <tr>
-                    {{-- Columna Variable --}}
-                    <td class="fw-semibold subvariable-cell text-white">
-                        {{ $subvariable->descripcion }}
-                    </td>
-
-                    {{-- Columnas cabeceras vacías --}}
-                    @for($i = 0; $i < $variable->total_leaf_columns; $i++)
-                        <td class="data"></td>
-                    @endfor
-
-                </tr>
-
+            
+            <tr>
+                {{-- Columna Variable --}}
+                <td class="fw-semibold subvariable-cell text-white">
+                    {{ $subvariable->descripcion }}
+                </td>
+                
+                {{-- Columnas cabeceras vacías --}}
+                @for($i = 0; $i < $variable->total_leaf_columns; $i++)
+                <td class="data"></td>
+                @endfor
+                
+            </tr>
+            
             @endforeach
-
+            
         </tbody>
-
+        
     </table>
+</div>
     <hr>
-
+</div>
 @endforeach
 
 <div class="mt-3 mb-3">
-    <button type="button" class="btn btn-primary btn-sm" id="btnAgregarSubvariable" title="Agregar subvariable">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVariableModal" title="Agregar subvariable">
         <i class="ri fs-5 ri-add-line"></i>&nbsp; Agregar Variable
     </button>
 </div>
@@ -183,36 +197,133 @@ $rows = $buildRows($variable->cabeceras);
 
             <div class="modal-body">
 
-                <table class="table table-sm table-hover">
+                <table id="dataTable" class="table table-sm table-hover">
 
                     <thead>
                         <tr>
-                            <th>Variable</th>
-                            <th width="120">Acción</th>
+                            <th>Variable</th> 
+                            <th>Subvariables</th>
+                            <th>Cabeceras</th>
+                            <th class="actions">Accion</th>
                         </tr>
                     </thead>
 
                 <tbody>
 
-                @foreach($variablesDisponibles as $var)
+                @foreach($variables as $variable)
 
-                <tr>
-                <td>{{ $var->descripcion }}</td>
-
-                <td>
-                <button class="btn btn-success btn-sm add-variable"
-                    data-id="{{ $var->id }}">
-                    Añadir
-                </button>
-                </td>
-
-                </tr>
+                    <tr>
+                        <td>{{ $variable->descripcion }}</td>
+                        <td class="data">
+                            <span class="badge bg-label-info cursor-pointer" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#subvars-{{ $variable->id }}" 
+                            aria-expanded="false" 
+                            aria-controls="subvars-{{ $variable->id }}">
+                                {{ $variable->subvariables->count() }} subvariables  <i class="ri ri-arrow-down-s-fill"></i>
+                            </span>
+                            <div class="collapse mt-2" id="subvars-{{ $variable->id }}">
+                                <div class="p-2 bg-light rounded small">
+                                    @forelse($variable->subvariables as $sub)
+                                        <div>• {{ $sub->descripcion }}</div>
+                                    @empty
+                                        <div class="text-muted">Sin subvariables</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </td>
+                        <td class="data">
+                            <span class="badge bg-label-success cursor-pointer"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#cabs-{{ $variable->id }}"
+                            aria-expanded="false"
+                            aria-controls="cabs-{{ $variable->id }}">
+                                {{ $variable->cabeceras->count() }} cabeceras   <i class="ri ri-arrow-down-s-fill"></i>
+                            </span>
+                            <div class="collapse mt-2" id="cabs-{{ $variable->id }}">
+                                <div class="p-2 bg-light rounded small">
+                                    @php
+                                        // Construir árbol de cabeceras
+                                        $cabecerasHijas = $variable->cabeceras->groupBy('cabecera_id');
+                                        
+                                        $renderTree = function($parentId = null, $level = 0) use (&$renderTree, $cabecerasHijas, $variable) {
+                                            $cabeceras = $cabecerasHijas->get($parentId) ?? collect();
+                                            $count = count($cabeceras);
+                                            
+                                            foreach ($cabeceras as $index => $cab) {
+                                                $isLast = ($index === $count - 1);
+                                                $prefix = '';
+                                                
+                                                // Crear prefijo tipo árbol
+                                                if ($level > 0) {
+                                                    for ($i = 0; $i < $level - 1; $i++) {
+                                                        $prefix .= '│&nbsp;&nbsp;&nbsp;';
+                                                    }
+                                                    $prefix .= $isLast ? '└─ ' : '├─ ';
+                                                }
+                                                
+                                                echo '<div>' . $prefix . htmlspecialchars($cab->descripcion, ENT_QUOTES, 'UTF-8') . '</div>';
+                                                
+                                                // Renderizar recursivamente hijos
+                                                $renderTree($cab->id, $level + 1);
+                                            }
+                                        };
+                                        
+                                        $renderTree();
+                                    @endphp
+                                    @if($variable->cabeceras->isEmpty())
+                                        <div class="text-muted">Sin cabeceras</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-icon add-variable"
+                                data-id="{{ $variable->id }}"
+                                @if (in_array($variable->id, $currVars))
+                                    disabled
+                                @endif
+                                >
+                                <i class="ri ri-add-line bg-success"></i>
+                            </button>
+                        </td>
+                    </tr>
 
                 @endforeach
 
                 </tbody>
 
                 </table>
+
+                <button class="btn btn-primary mb-3" id="btnNuevaVariable">
+                   + Nueva variable
+                </button>
+
+                <!-- FORMULARIO NUEVA VARIABLE -->
+                <div id="formNuevaVariable" style="display:none">
+
+                    <form id="crearVariableForm">
+
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre de la variable</label>
+                            <input type="text" class="form-control" name="descripcion" required>
+                        </div>
+
+                        <button class="btn btn-success">
+                            Crear variable
+                        </button>
+
+                        <button type="button" class="btn btn-secondary" id="cancelNuevaVariable">
+                            Cancelar
+                        </button>
+
+                    </form>
+
+                    <hr>
+
+                </div>
 
             </div>
 
@@ -221,40 +332,111 @@ $rows = $buildRows($variable->cabeceras);
 </div>
 
 <script>
+    $(function () {
+        $("#dataTable").DataTable({
+            "pageLength": 5,
+            "language": {
+                "emptyTable": "No hay información",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                "infoFiltered": "(Filtrado de _MAX_ total registros)",
+                "infoPostFix": "",
+                "thousands": ",",
+                "lengthMenu": "",
+                "loadingRecords": "Cargando...",
+                "processing": "Procesando...",
+                "search": "Buscador:",
+                "zeroRecords": "Sin resultados encontrados",
+                "paginate": {
+                    "first": "Primero",
+                    "last": "Ultimo",
+                    "next": "Siguiente",
+                    "previous": "Anterior"
+                }
+            },
+            "responsive": true, "lengthChange": true, "autoWidth": false,
+
+        }).buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+    });
+</script>
+<script>
         $(function () {
-                // Base URL for update action
-                var baseUrl = "{{ url('formularios') }}";
-
-                // New establishment: reset form
-                $('#btnNewForm').on('click', function () {
-                        $('#formModalLabel').text('Nuevo formulario');
-                        $('#dataForm').attr('action', "{{ route('formularios.store') }}");
-                        $('#formMethod').val(''); // Limpia el método para creación
-                        $('#formNombre').val('');
-                        $('#dataSubmit').text('Crear');
+                $('#btnNuevaVariable').on('click', function(){
+                    $('#formNuevaVariable').slideDown();
                 });
 
-                // Edit establishment: populate and set action
-                $('.edit-data').on('click', function () {
-                        var id = $(this).data('id');
-                        var nombre = $(this).data('nombre');
-                        var gestionId = $(this).data('gestion_id'); 
-
-                        $('#formModalLabel').text('Editar formulario');
-                        $('#dataForm').attr('action', baseUrl + '/' + id);
-                        $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
-                        $('#formNombre').val(nombre);
-                        $('#formGestion').val(gestionId);
-                        $('#dataSubmit').text('Actualizar');
-
-                        var dataModal = new bootstrap.Modal(document.getElementById('dataModal'));
-                        dataModal.show();
+                $('#cancelNuevaVariable').on('click', function(){   
+                    $('#formNuevaVariable').slideUp();
                 });
-                $('#dataForm').on('submit', function() {
-                    $('#dataSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...');
-                    
+                $(document).on('click', '.add-variable', function () {
+
+                    $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                    const variableId = $(this).data('id');
+                    const formularioId = "{{ $formulario->id }}";
+
+                    $.post("{{ route('formularios.addVariable') }}", {
+                        _token: "{{ csrf_token() }}",
+                        formulario_id: formularioId,
+                        variable_id: variableId
+                    }).done(function (response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message,
+                            timer: 2500,
+                            showConfirmButton: false,
+                            target: document.getElementById('addVariableModal')
+                        });
+                        location.reload();
+                    })
+                });
+
+                $(document).on('click', '.delete-variable', function () {
+
+                    if(!confirm("Eliminar variable del formulario?")) return;
+
+                    const variableid = $(this).data('id');
+                    const formularioId = "{{ $formulario->id }}";
+
+                    $.post("{{ route('formularios.removeVariable') }}", {
+                        _token: "{{ csrf_token() }}",
+                        formulario_id: formularioId,
+                        variable_id: variableid
+                    }).done(function (response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message,
+                            timer: 2500,
+                            showConfirmButton: false
+                        });
+                        location.reload();
+                    })
+                });
+                $('#crearVariableForm').on('submit', function(e){
+
+                    e.preventDefault();
+
+                    $.post("{{ route('asignaciones.createVarForm', $formulario) }}", $(this).serialize())
+                    .done(function(response){
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Variable creada',
+                            timer: 2500,
+                            showConfirmButton: false,
+                            target: document.getElementById('addVariableModal')
+                        });
+
+                        setTimeout(function(){
+                            location.reload();
+                        }, 1500);
+
+                    });
+
                 });
         });
+        
 </script>
 <style>
     table.table-materio th.cabecera-cell {
