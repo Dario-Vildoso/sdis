@@ -37,6 +37,11 @@ trait HasRoles
         return $this;
     }
 
+    public function syncRoles($roles)
+    {
+        $this->roles()->sync($roles);
+    }
+
     /**
      * Verificar si el usuario tiene un rol específico
      */

@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RedController;
 use App\Http\Controllers\FormularioController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AsignacionController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\VariableController;
@@ -47,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('subvariables', SubVariableController::class);
     Route::resource('cabeceras', CabeceraController::class);
     Route::get('formulario/menu', [FormularioController::class, 'menu'])->name('formularios.menu');
+    Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
     Route::get('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'cargarPeriodo'])->name('formularios.periodo');
     Route::post('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'storeData'])->name('formularios.guardarPeriodo');
     Route::get('formulario/{formulario}/asignar-variables', [FormularioController::class, 'asignarVariables'])->name('formularios.asignarVariables');

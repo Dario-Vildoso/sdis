@@ -15,8 +15,6 @@
 
         <div class="navbar-nav align-items-center">
             <div class="nav-item d-flex align-items-center">
-                <i class="bx bx-search fs-4 lh-0"></i>
-                <input type="text" class="form-control border-0 shadow-none" placeholder="Buscar...">
             </div>
         </div>
 
@@ -40,7 +38,20 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="#" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="{{ asset('assets/img/avatars/1.png') }}" class="w-px-40 h-auto rounded-circle">
+                        @switch(Auth::user()->alcances()->first()?->tipo)
+                        @case('red')
+                            <i class="ri ri-git-branch-line fs-2 bg-info"></i>
+                            @break
+                        @case('municipio')
+                            <i class="ri ri-community-fill fs-2 bg-info"></i>
+                            @break
+                        @case('establecimiento')
+                            <i class="ri ri-building-4-fill fs-2 bg-info"></i>
+                            @break
+                        @default
+                            <i class="ri ri-admin-fill fs-2 bg-info"></i>
+                            @break
+                    @endswitch
                     </div>
                 </a>
 

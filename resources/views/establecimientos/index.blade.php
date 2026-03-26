@@ -5,15 +5,14 @@
 @section('content')
 
 @if(session('success'))
-    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-    </div>
-
     <script>
-        setTimeout(function() {
-            var alert = new bootstrap.Alert(document.getElementById('successAlert'));
-            alert.close();
-        }, 3000);
+        Swal.fire({
+            icon: 'success',
+            title: 'Exito',
+            text: "{{ session('success') }}",
+            timer: 1000,
+            showConfirmButton: false
+        });
     </script>
 @endif
 

@@ -89,9 +89,9 @@
                         <div>Formularios</div>
                     </a>
                 </li>
-                <li class="menu-item {{ request()->routeIs('formularios.*') ? 'active' : '' }}">
-                    <a href="{{ route('formularios.index') }}" class="menu-link">
-                        <i class="menu-icon ri {{ request()->routeIs('formularios.*') ? 'ri-bar-chart-fill' : 'ri-bar-chart-line' }} bg-warning"></i>
+                <li class="menu-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                    <a href="{{ route('reportes.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('reportes.*') ? 'ri-bar-chart-fill' : 'ri-bar-chart-line' }} bg-warning"></i>
                         <div>Reportes</div>
                     </a>
                 </li>
