@@ -42,11 +42,14 @@ class PeriodoController extends Controller
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
+        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
         $periodo = new Periodo();
-        $periodo->descripcion = $request->descripcion;
+        $periodo->descripcion = $meses[intval($request->descripcion)-1];
         $periodo->fecha_inicio = $request->fecha_inicio;
         $periodo->fecha_fin = $request->fecha_fin;
         $periodo->formulario_id = $request->form_id;
+        $periodo->numero = $request->descripcion;
         $periodo->estado = false;
         $periodo->created_at = Carbon::now();
         $periodo->updated_at = Carbon::now();

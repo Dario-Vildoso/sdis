@@ -22,7 +22,7 @@
         icon: 'success',
         title: 'Éxito',
         text: "{{ session('success') }}",
-        timer: 2500,
+        timer: 1000,
         showConfirmButton: false
     });
 </script>
@@ -34,7 +34,7 @@
 </button>
 
     <div class="table-responsive">
-        <table id="dataTable" class="table table-striped table-materio">
+        <table id="dataTable" class="table table-materio">
             <thead>
             <tr>
                 <th class="id-header"></th>
@@ -54,11 +54,11 @@
                             <strong>{{ $periodo->id }}</strong>
                         </div>
                     </td>
-                    <td>{{ $formularios->where('id', $periodo->formulario_id)->first()->nombre ?? 'Sin formulario' }} - {{ $gestiones->where('id', $formularios->where('id', $periodo->formulario_id)->first()->gestion_id ?? 0)->first()->nombre ?? 'Sin gestión' }}</td>
-                    <td>{{ $periodo->descripcion }}</td>
-                    <td>{{ $periodo->fecha_inicio }}</td>
-                    <td>{{ $periodo->fecha_fin }}</td>
-                    <td>
+                    <td class="data">{{ $formularios->where('id', $periodo->formulario_id)->first()->nombre ?? 'Sin formulario' }} - {{ $gestiones->where('id', $formularios->where('id', $periodo->formulario_id)->first()->gestion_id ?? 0)->first()->nombre ?? 'Sin gestión' }}</td>
+                    <td class="data">{{ $periodo->descripcion }}</td>
+                    <td class="data">{{ $periodo->fecha_inicio }}</td>
+                    <td class="data">{{ $periodo->fecha_fin }}</td>
+                    <td class="data">
                         <div class="form-check form-switch">
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $periodo->id }}" data-id="{{ $periodo->id }}" {{ $periodo->estado ? 'checked' : '' }}>
                         </div>
@@ -200,12 +200,21 @@
                         </div>
                         {{-- Descripción --}}
                         <div class="col-md-12 mb-3">
-                            <label for="periodoDescripcion" class="form-label">Descripción</label>
-                            <input type="text"
-                                class="form-control"
-                                id="periodoDescripcion"
-                                name="descripcion"
-                                required>
+                            <label for="periodoDescripcion" class="form-label">Periodo</label>
+                            <select class="form-select" name="descripcion" id="periodoDescriocion" required>
+                                <option value="1">Enero</option>
+                                <option value="2">Febrero</option>
+                                <option value="3">Marzo</option>
+                                <option value="4">Abril</option>
+                                <option value="5">Mayo</option>
+                                <option value="6">Junio</option>
+                                <option value="7">Julio</option>
+                                <option value="8">Agosto</option>
+                                <option value="9">Septiembre</option>
+                                <option value="10">Octubre</option>
+                                <option value="11">Noviembre</option>
+                                <option value="12">Diciembre</option>
+                            </select>
                         </div>
                         {{-- Fecha de Inicio --}}
                         <div class="col-md-6 mb-3">

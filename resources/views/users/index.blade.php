@@ -56,9 +56,11 @@
                                 data-id="{{ $user->id }}"
                                 data-name="{{ $user->name }}"
                                 data-email="{{ $user->email }}"
-                                data-rol="{{ $user->roles()->first()?->name }}"
+                                data-rol="{{ $user->roles()->first()?->slug }}"
+                                data-rol-id="{{ $user->roles()->first()?->id }}"
                                 data-tipo="{{ $user->alcances()->first()?->tipo }}"
                                 data-alcance="{{ $user->alcances()->first()?->alcance_id }}"
+                                data-bs-toggle="modal" data-bs-target="#userModal"
                                 >
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
@@ -231,14 +233,20 @@
                 });
 
                 // Edit user: populate and set action
-                $('.edit-user').on('click', function () {
+                $(document).on('click', '.edit-user', function () {
+                    // alert('id')
                         var id = $(this).data('id');
+                        // alert(id)
                         var name = $(this).data('name');
+                        // alert(name)
                         var email = $(this).data('email');
+                        // alert(email)
                         var rol = $(this).data('rol');
+                        var rolId = $(this).data('rol-id');
                         var tipo = $(this).data('tipo');
+                        // alert(tipo)
                         var alcance = $(this).data('alcance');
-
+                        // alert(alcance)
                         $('#userModalLabel').text('Editar usuario');
                         $('#userForm').attr('action', baseUrl + '/' + id);
                         $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
@@ -246,11 +254,11 @@
                         $('#userEmail').val(email);
                         $('#passwordField').addClass('d-none'); // Oculta el campo de contraseña al editar
                         $('#userPassword').prop('required', false).val('');
-                        $('#userRoles').val(rol)
-                        if (rol === 'reportes'){
+                        $('#userRoles').val(rolId);
+                        if (rol == 'reportes'){
                             $('#typeField').removeClass('d-none').prop('required', true);
                             $('#scopeType').val(tipo)
-                            switch (alcance) {
+                            switch (tipo) {
                                 case 'establecimiento':
                                     $('#establecimientoField').removeClass('d-none').prop('required', true);
                                     $('#municipioField').addClass('d-none').prop('required', false);
@@ -273,8 +281,6 @@
                         }
                         $('#userSubmit').text('Actualizar');
 
-                        var userModal = new bootstrap.Modal(document.getElementById('userModal'));
-                        userModal.show();
                 });
         });
 </script>
