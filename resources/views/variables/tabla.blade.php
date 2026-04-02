@@ -258,6 +258,64 @@ $rows = $buildRows($variable->cabeceras);
     $(function() {
         const variableId = {{ $variable->id }};
         const totalColumns = {{ $variable->total_leaf_columns }};
+                const excepcionesGuardadas = @json(($excepciones ?? collect())->map(fn($e) => [
+            'subvariable_id' => (string) $e->subvariable_id,
+            'cabecera_id' => (string) $e->cabecera_id,
+        ]));
+
+        function getLeafHeaders() {
+            const allHeaders = $('#tablaVariable thead th[data-cabecera-id]');
+            const leaves = [];
+
+            allHeaders.each(function() {
+                const th = $(this);
+                const cabeceraId = String(th.attr('data-cabecera-id') ?? '').trim();
+                if (!cabeceraId) return;
+
+                const hasChildren = $('#tablaVariable thead th[data-cabecera-padre="' + cabeceraId + '"]').length > 0;
+                if (!hasChildren) {
+                    leaves.push({
+                        id: cabeceraId,
+                        element: th,
+                    });
+                }
+            });
+
+            return leaves;
+        }
+
+        function syncCellMetadata() {
+            const leafHeaders = getLeafHeaders();
+
+            $('#tablaVariable tbody tr.subvariable-row').each(function() {
+                const row = $(this);
+                const subvariableId = String(row.attr('data-subvariable-id') ?? '').trim();
+                const dataCells = row.find('td.celda-dato');
+
+                dataCells.each(function(index) {
+                    const cell = $(this);
+                    const leaf = leafHeaders[index] ?? null;
+                    const cabeceraId = leaf ? leaf.id : '';
+                    const cellId = `celda-${subvariableId}-${cabeceraId}`;
+
+                    cell.attr('data-subvariable-id', subvariableId);
+                    cell.attr('data-cabecera-id', cabeceraId);
+                    cell.attr('id', cellId);
+                });
+            });
+        }
+
+        function aplicarExcepcionesGuardadas() {
+            const blockedSet = new Set(
+                (excepcionesGuardadas || []).map(e => `${String(e.subvariable_id)}|${String(e.cabecera_id)}`)
+            );
+
+            $('#tablaVariable td.celda-dato').each(function() {
+                const cell = $(this);
+                const key = `${String(cell.attr('data-subvariable-id') || '')}|${String(cell.attr('data-cabecera-id') || '')}`;
+                cell.toggleClass('celda-apagada', blockedSet.has(key));
+            });
+        }
         // Insert 'Agregar Nivel' button into the last header row (only visible at deepest level)
         function ensureButtons() {
             const headerRows = $('#tablaVariable thead tr');
@@ -298,6 +356,12 @@ $rows = $buildRows($variable->cabeceras);
             })
         }
         ensureButtons();
+        syncCellMetadata();
+        aplicarExcepcionesGuardadas();
+
+        $(document).on('click', '#tablaVariable td.celda-dato', function() {
+            $(this).toggleClass('celda-apagada');
+        });
         // Toggle estado: disable row
         $(document).on('change', '.estado-toggle', function() {
             const row = $(this).closest('tr');
@@ -388,6 +452,7 @@ $rows = $buildRows($variable->cabeceras);
                 }
 
             });
+            syncCellMetadata();
 
             // guardar ids existentes para borrar en backend
             if (!isNaN(cabeceraId)) {
@@ -449,6 +514,7 @@ $rows = $buildRows($variable->cabeceras);
             
             
             $('#tablaVariable tbody').append(filaHtml);
+            syncCellMetadata();
         });
 
         function actualizarColspanAncestros(cabecera, incremento) {
@@ -576,7 +642,7 @@ $rows = $buildRows($variable->cabeceras);
                             .insertBefore(deleteCell);
                     }
                 });
-
+                syncCellMetadata();
             });
 
         });
@@ -666,6 +732,7 @@ $rows = $buildRows($variable->cabeceras);
             lastRow.after(newRow);
             // ensure the add-level button moves to the new last row
             ensureButtons();
+            syncCellMetadata();
         });
         function recalcularColspans() {
 
@@ -748,7 +815,7 @@ $rows = $buildRows($variable->cabeceras);
 
             // mover botones
             ensureButtons();
-
+            syncCellMetadata();
         });
         // Guardar cambios
         $('#btnGuardarCambios').on('click', function(e) {
@@ -760,6 +827,7 @@ $rows = $buildRows($variable->cabeceras);
                 subvariables: [],
                 cabeceras: [],
                 cabeceras_new: [],
+                excepciones: [],
                 deleted_subvariables: subvarsToDelete,
                 deleted_cabeceras: cabsToDelete
             };
@@ -812,6 +880,18 @@ $rows = $buildRows($variable->cabeceras);
                     });
                 }
             });
+            $('#tablaVariable td.celda-dato.celda-apagada').each(function() {
+                const cell = $(this);
+                const subvariableId = cell.attr('data-subvariable-id');
+                const cabeceraId = cell.attr('data-cabecera-id');
+
+                if (subvariableId && cabeceraId) {
+                    cambios.excepciones.push({
+                        subvariable_id: subvariableId,
+                        cabecera_id: cabeceraId,
+                    });
+                }
+            });
             // Enviar cambios por AJAX
             $.ajax({
                 url: '{{ route("variables.guardarTabla", $variable) }}',
@@ -845,6 +925,15 @@ $rows = $buildRows($variable->cabeceras);
 <style>
     .tabla-editable td.data {
         min-height: 2rem;
+    }
+    .tabla-editable td.celda-dato {
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .tabla-editable td.celda-dato.celda-apagada {
+        background-color: linear-gradient(0deg, #15dd51, #15dd51) !important;
+        opacity: 0.2;
     }
 
     .estado-toggle{

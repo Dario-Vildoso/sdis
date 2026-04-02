@@ -58,8 +58,9 @@ class FormularioController extends Controller
 
     public function cargarPeriodo(Formulario $formulario, Periodo $periodo)
     {
-        if (now() > $periodo->fecha_fin || now() < $periodo->fecha_inicio) {
-            return redirect()->route('formularios.menu')->with('error', 'El periodo no está activo.');
+
+        if  ((now() > $periodo->fecha_fin || now() < $periodo->fecha_inicio) && !$periodo->estado) {
+            return redirect()->route('formularios.menu')->with('error', 'El periodo no está activo.');
         }
         $user = Auth::user();
 
@@ -91,7 +92,6 @@ class FormularioController extends Controller
                     'establecimiento_id' => $establecimiento_id,
                 ],
                 [
-                    // ✏️ Valor a actualizar
                     'valor' => $dato['valor'],
                     'fecha' => date('Y-m-d'),
                     'hora' => date('H:i:s'),

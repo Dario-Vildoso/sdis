@@ -37,31 +37,30 @@
     };
 @endphp
 
-<div class="card mb-4">
+<div class="card mb-4"> 
     <div class="card-body">
         <h4 class="card-title mb-3">Filtros de reporte</h4>
 
         <form method="GET" action="{{ route('reportes.index') }}">
-            
-            <div class="row">
-                
-                <!-- 🔹 COLUMNA IZQUIERDA -->
-                <div class="col-md-6 d-flex flex-column justify-content-start pe-4 border-end">
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Formulario</label>
-                        <select name="formulario_id" class="form-select" onchange="this.form.submit()">
-                            <option value="">Seleccione...</option>
-                            @foreach($formularios as $item)
-                                <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
-                                    {{ $item->nombre }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+            <div class="row">
+
+                <div class="col-md-6 border-end pe-4">
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="form-label">Formulario</label>
+                            <select name="formulario_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">Seleccione...</option>
+                                @foreach($formularios as $item)
+                                    <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
+                                        {{ $item->nombre }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-6">
                             <label class="form-label">Periodo desde</label>
                             <select name="periodo_desde_id" class="form-select">
                                 @foreach($periodos as $periodo)
@@ -71,8 +70,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        <div class="col-md-6 mb-3">
+
+                        <div class="col-6">
                             <label class="form-label">Periodo hasta</label>
                             <select name="periodo_hasta_id" class="form-select">
                                 @foreach($periodos as $periodo)
@@ -82,50 +81,78 @@
                                 @endforeach
                             </select>
                         </div>
+
                     </div>
-
-                    @if($scopeTipo === 'municipio')
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" name="mostrar_consolidado" value="1" id="mostrarConsolidado" {{ $mostrarConsolidado ? 'checked' : '' }}>
-                            <label class="form-check-label" for="mostrarConsolidado">
-                                Mostrar consolidado municipal
-                            </label>
-                        </div>
-                    @endif
-
                 </div>
 
-                <!-- 🔹 COLUMNA DERECHA -->
-                <div class="col-md-6 ps-4">
-                    
-                    <div class="mb-2">
-                        <label class="form-label">Buscar establecimiento</label>
-                        <input
-                            type="text"
-                            class="form-control"
-                            id="establecimientoSearch"
-                            placeholder="Escribe para filtrar establecimientos..."
-                        >
-                    </div>
+                <div class="col-md-6">
+                    <div class="row g-3">
 
-                    <div>
-                        <label class="form-label">Establecimientos</label>
-                        <select name="establecimiento_ids[]" id="establecimientoSelect" class="form-select" multiple size="8">
-                            @foreach($establecimientosDisponibles as $establecimiento)
-                                <option value="{{ $establecimiento->id }}" {{ $establecimientosSeleccionados->contains($establecimiento->id) ? 'selected' : '' }}>
-                                    {{ $establecimiento->descripcion }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <small class="text-muted">Mantén Ctrl/Cmd para selección múltiple.</small>
-                    </div>
+                        @if(in_array($scopeTipo, ['red', 'sedes']))
+                            <div class="col-md-6">
+                                <label class="form-label">Red(es)</label>
+                                <select name="red_ids[]" id="redSelect" class="form-select" multiple size="2">
+                                    @foreach($redesDisponibles as $red)
+                                        <option value="{{ $red['id'] }}" {{ $redesSeleccionadas->contains($red['id']) ? 'selected' : '' }}>
+                                            {{ $red['nombre'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
 
+                        @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']))
+                            <div class="col-md-6">
+                                <label class="form-label">Municipio(s)</label>
+                                <select name="municipio_ids[]" id="municipioSelect" class="form-select" multiple size="2">
+                                    @foreach($municipiosDisponibles as $municipio)
+                                        <option value="{{ $municipio['id'] }}" data-red-id="{{ $municipio['red_id'] }}" {{ $municipiosSeleccionados->contains($municipio['id']) ? 'selected' : '' }}>
+                                            {{ $municipio['nombre'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="col-md-12">
+                            
+                            
+                            <label class="form-label">Establecimientos</label>
+                            <div class="col-md-6">
+                                <input
+                                    type="text"
+                                    class="form-control mb-2"
+                                    id="establecimientoSearch"
+                                    placeholder="Buscar..."
+                                >
+                            </div>
+                            <select name="establecimiento_ids[]" id="establecimientoSelect" class="form-select" multiple size="6">
+                                @foreach($establecimientosDisponibles as $establecimiento)
+                                    <option value="{{ $establecimiento->id }}" {{ $establecimientosSeleccionados->contains($establecimiento->id) || $establecimientosDisponibles->count() == 1 ? 'selected' : '' }}>
+                                        {{ $establecimiento->descripcion }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']))
+                            <div class="col-12">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="mostrar_consolidado" value="1" id="mostrarConsolidado" {{ $mostrarConsolidado ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="mostrarConsolidado">
+                                        Mostrar Consolidado
+                                    </label>
+                                </div>
+                            </div>
+                        @endif
+
+                    </div>
                 </div>
 
             </div>
 
-            <!-- 🔹 BOTONES -->
-            <div class="mt-4 d-flex gap-2">
+            {{-- 🔹 BOTONES --}}
+            <div class="d-flex gap-2 mt-4">
                 <button class="btn btn-primary" type="submit">
                     <i class="ri ri-filter-3-line"></i> Aplicar filtros
                 </button>
@@ -163,7 +190,7 @@
                     </button>
                 </h2>
 
-                <div id="collapse-{{ $index }}" class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}" data-bs-parent="#acordeonVariables">
+                <div id="collapse-{{ $index }}" class="accordion-collapse collapse" data-bs-parent="#acordeonVariables">
                     <div class="accordion-body">
                         <div class="row mb-3">
                             <div class="col-md-6">
@@ -171,17 +198,23 @@
                                 <input
                                     type="text"
                                     class="form-control subvariable-search"
-                                    placeholder="Filtrar subvariables en esta variable..."
+                                    placeholder="Buscar..."
                                     data-variable-id="{{ $row['variable']->id }}"
                                 >
                             </div>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered table-sm align-middle">
+                            <table class="table align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th rowspan="{{ max($niveles, 1) }}">Subvariable</th>
+                                        @if(in_array($scopeTipo, ['red', 'sedes']))
+                                        <th rowspan="{{ max($niveles, 1) }}">Red</th>
+                                        @endif
+                                        @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']))
+                                        <th rowspan="{{ max($niveles, 1) }}">Municipio</th>
+                                        @endif
                                         <th rowspan="{{ max($niveles, 1) }}">Establecimiento</th>
                                         @foreach($headerRows[0] ?? [] as $cabecera)
                                             @php
@@ -189,9 +222,9 @@
                                             @endphp
 
                                             @if($children->isEmpty())
-                                                <th rowspan="{{ $niveles }}" class="text-center">{{ $cabecera->descripcion }}</th>
+                                                <th rowspan="{{ $niveles }}" class="text-center" style="background: hsl(213, 10%, 75%)">{{ $cabecera->descripcion }}</th>
                                             @else
-                                                <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" class="text-center">{{ $cabecera->descripcion }}</th>
+                                                <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" class="text-center" style="background: hsl(213, 10%, 75%)">{{ $cabecera->descripcion }}</th>
                                             @endif
                                         @endforeach
                                         <th rowspan="{{ max($niveles, 1) }}" class="text-end">Total</th>
@@ -199,15 +232,24 @@
 
                                     @for($i = 1; $i < $niveles; $i++)
                                         <tr>
-                                            @foreach($headerRows[$i] ?? [] as $cabecera)
+                                            @foreach($headerRows[$i] ?? [] as $index => $cabecera)
                                                 @php
                                                     $children = $childrenByParent->get($cabecera->id, collect());
+                                                    $hue = 213 - ($i * 3);
+                                                    $saturation = 10;
+                                                    $lightness = 75 - ($i * 5);
                                                 @endphp
 
                                                 @if($children->isEmpty())
-                                                    <th rowspan="{{ $niveles - $i }}" class="text-center">{{ $cabecera->descripcion }}</th>
+                                                    <th rowspan="{{ $niveles - $i }}" 
+                                                    class="text-center"
+                                                    style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                                                    >{{ $cabecera->descripcion }}</th>
                                                 @else
-                                                    <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" class="text-center">{{ $cabecera->descripcion }}</th>
+                                                    <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" 
+                                                    class="text-center"
+                                                    style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                                                    >{{ $cabecera->descripcion }}</th>
                                                 @endif
                                             @endforeach
                                         </tr>
@@ -222,6 +264,12 @@
                                         @foreach($subData['establecimientos'] as $detalle)
                                             <tr class="subvariable-row" data-variable-id="{{ $row['variable']->id }}" data-subvariable-label="{{ $subName }}">
                                                 <td>{{ $subData['subvariable']->descripcion }}</td>
+                                                @if(in_array($scopeTipo, ['red', 'sedes']))
+                                                <td>{{ $detalle['establecimiento']->red_nombre }}</td>
+                                                @endif
+                                                @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']))
+                                                <td>{{ $detalle['establecimiento']->municipio_nombre }}</td>
+                                                @endif
                                                 <td>{{ $detalle['establecimiento']->descripcion }}</td>
                                                 @foreach($leafCabeceras as $cabecera)
                                                     <td class="text-end">{{ number_format($detalle['totales'][$cabecera->id] ?? 0, 0, ',', '.') }}</td>
@@ -230,16 +278,35 @@
                                             </tr>
                                         @endforeach
 
-                                        @if($subData['consolidado'])
+                                        @foreach($subData['consolidado_municipio'] as $consolidadoMunicipio)
                                             <tr class="table-primary subvariable-row" data-variable-id="{{ $row['variable']->id }}" data-subvariable-label="{{ $subName }}">
                                                 <td>{{ $subData['subvariable']->descripcion }}</td>
+                                                @if(in_array($scopeTipo, ['red', 'sedes']))
+                                                <td><strong>{{ $consolidadoMunicipio['red_nombre'] }}</strong></td>
+                                                @endif
+                                                <td><strong>{{ $consolidadoMunicipio['municipio_nombre'] }}</strong></td>
                                                 <td><strong>Consolidado municipal</strong></td>
                                                 @foreach($leafCabeceras as $cabecera)
-                                                    <td class="text-end"><strong>{{ number_format($subData['consolidado']['totales'][$cabecera->id] ?? 0, 0, ',', '.') }}</strong></td>
+                                                    <td class="text-end"><strong>{{ number_format($consolidadoMunicipio['totales'][$cabecera->id] ?? 0, 0, ',', '.') }}</strong></td>
                                                 @endforeach
-                                                <td class="text-end"><strong>{{ number_format($subData['consolidado']['total_general'], 0, ',', '.') }}</strong></td>
+                                                <td class="text-end"><strong>{{ number_format($consolidadoMunicipio['total_general'], 0, ',', '.') }}</strong></td>
                                             </tr>
+                                        @endforeach
+                                        @if (in_array($scopeTipo, ['red', 'sedes']))
+                                        
+                                        @foreach($subData['consolidado_red'] as $consolidadoRed)
+                                        <tr class="table-success subvariable-row" data-variable-id="{{ $row['variable']->id }}" data-subvariable-label="{{ $subName }}">
+                                            <td>{{ $subData['subvariable']->descripcion }}</td>
+                                            <td><strong>{{ $consolidadoRed['red_nombre'] }}</strong></td>
+                                            <td colspan="2"><strong>Consolidado de Red</strong></td>
+                                            @foreach($leafCabeceras as $cabecera)
+                                            <td class="text-end"><strong>{{ number_format($consolidadoRed['totales'][$cabecera->id] ?? 0, 0, ',', '.') }}</strong></td>
+                                            @endforeach
+                                            <td class="text-end"><strong>{{ number_format($consolidadoRed['total_general'], 0, ',', '.') }}</strong></td>
+                                        </tr>
+                                        @endforeach
                                         @endif
+                                        
                                     @endforeach
                                 </tbody>
                             </table>
@@ -253,6 +320,18 @@
 
 <script>
     $(function () {
+        $('#redSelect').on('change', function () {
+            const selectedRedes = $(this).val() || [];
+
+            $('#municipioSelect option').each(function () {
+                const redId = String($(this).data('red-id'));
+                const match = selectedRedes.length === 0 || selectedRedes.includes(redId);
+
+                $(this).prop('disabled', !match);
+                this.hidden = !match;
+            });
+        });
+
         $('#establecimientoSearch').on('input', function () {
             const term = $(this).val().toLowerCase().trim();
 
@@ -264,6 +343,8 @@
                 this.hidden = !match;
             });
         });
+
+        $('#redSelect').trigger('change');
 
         $('.subvariable-search').on('input', function () {
             const term = $(this).val().toLowerCase().trim();

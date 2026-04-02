@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Variable;
 use App\Models\SubVariable;
 use App\Models\Cabecera;
+use App\Models\Excepcion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -60,11 +61,13 @@ class VariableController extends Controller
     {
         $variable = Variable::with(['cabeceras' => function ($query) {
             $query->whereNull('cabecera_id')->with('hijos');
-        }])->findOrFail($variable->id);
+        }, 'subvariables'])->findOrFail($variable->id);
         $variable->total_leaf_columns = $variable->cabeceras->sum(
             fn($c) => $this->countLeaves($c)
         );
-        return view('variables.tabla', compact('variable'));
+        $excepciones = Excepcion::whereIn('subvariable_id', $variable->subvariables->pluck('id'))
+            ->get(['subvariable_id', 'cabecera_id']);
+        return view('variables.tabla', compact('variable', 'excepciones'));
     }
 
     /**
@@ -146,6 +149,9 @@ class VariableController extends Controller
             // Log payload received for debugging
             Log::debug('guardarTabla payload', $data ?: ['raw' => $request->getContent()]);
 
+            $mapSubvariables = [];
+            $mapCabeceras = [];
+
             // Actualizar nombre de la variable
             if (isset($data['variable']['descripcion'])) {
                 $variable->update(['descripcion' => $data['variable']['descripcion']]);
@@ -169,13 +175,16 @@ class VariableController extends Controller
                                 'descripcion' => $subvarData['descripcion'],
                                 'estado' => $estado,
                             ]);
-                    } else if (strpos($subvarData['id'], 'new-') === 0) {
-                        // Crear nueva subvariable
-                        SubVariable::create([
-                            'variable_id' => $variable->id,
-                            'descripcion' => $subvarData['descripcion'],
-                            'estado' => $estado,
-                        ]);
+
+                        $mapSubvariables[(string) $subvarData['id']] = (int) $subvarData['id'];
+                        } else if (strpos($subvarData['id'], 'new-') === 0) {
+                            // Crear nueva subvariable
+                            $newSubvariable = SubVariable::create([
+                                'variable_id' => $variable->id,
+                                'descripcion' => $subvarData['descripcion'],
+                                'estado' => $estado,
+                            ]);
+                            $mapSubvariables[(string) $subvarData['id']] = (int) $newSubvariable->id;
                     }
                 }
             }
@@ -189,50 +198,75 @@ class VariableController extends Controller
                                 'descripcion' => $cabData['descripcion'],
                                 'cabecera_id' => $cabData['cabecera_id'] ?? null,
                             ]);
+                        $mapCabeceras[(string) $cabData['id']] = (int) $cabData['id'];
                     } elseif (strpos($cabData['id'], 'new-') === 0) {
                         // crear cabecera nueva al nivel más profundo (sin padre)
-                        Cabecera::create([
+                        $newCabecera = Cabecera::create([
                             'variable_id' => $variable->id,
                             'descripcion' => $cabData['descripcion'],
                             'cabecera_id' => null,
                         ]);
+                        $mapCabeceras[(string) $cabData['id']] = (int) $newCabecera->id;
                     }
                 }
             }
             
             if (isset($data['cabeceras_new'])) {
-                $mapIds = [];
                 foreach ($data['cabeceras_new'] as $cabData) {
-                    if (is_numeric($cabData['cabecera_id'])) {
-                        $cabnew = new Cabecera();
-                        $cabnew->descripcion = $cabData['descripcion'];
-                        $cabnew->variable_id = $variable->id;
-                        $cabnew->cabecera_id = $cabData['cabecera_id'];
-                        $cabnew->estado = 'activo';
-                        $cabnew->save();
-                        if (isset($cabData['id'])) {
-                            $mapIds[$cabData['id']] = $cabnew->id;
+                    $parentKey = isset($cabData['cabecera_id']) ? (string) $cabData['cabecera_id'] : null;
+                    $parentId = null;
+                    if ($parentKey !== null) {
+                        if (is_numeric($parentKey)) {
+                            $parentId = (int) $parentKey;
+                        } elseif (isset($mapCabeceras[$parentKey])) {
+                            $parentId = $mapCabeceras[$parentKey];
                         }
-                    } elseif (strpos($cabData['cabecera_id'], 'new-') === 0) {
-                        $cabnew = new Cabecera();
-                        $cabnew->descripcion = $cabData['descripcion'];
-                        $cabnew->variable_id = $variable->id;
-                        $cabnew->cabecera_id = $mapIds[$cabData['cabecera_id']] ?? $cabData['cabecera_id'];
-                        $cabnew->estado = 'activo';
-                        $cabnew->save();
-                        if (isset($cabData['id'])) {
-                            $mapIds[$cabData['id']] = $cabnew->id;
+                    }
+
+                    $cabnew = new Cabecera();
+                    $cabnew->descripcion = $cabData['descripcion'];
+                    $cabnew->variable_id = $variable->id;
+                    $cabnew->cabecera_id = $parentId;
+                    $cabnew->estado = 'activo';
+                    $cabnew->save();
+
+                    if (isset($cabData['id'])) {
+                        $mapCabeceras[(string) $cabData['id']] = (int) $cabnew->id;
+                    }
+                }
+            }
+
+            if (isset($data['excepciones']) && is_array($data['excepciones'])) {
+                $subvariableIds = SubVariable::where('variable_id', $variable->id)->pluck('id');
+                Excepcion::whereIn('subvariable_id', $subvariableIds)->delete();
+
+                foreach ($data['excepciones'] as $excepcion) {
+                    $subvariableKey = isset($excepcion['subvariable_id']) ? (string) $excepcion['subvariable_id'] : null;
+                    $cabeceraKey = isset($excepcion['cabecera_id']) ? (string) $excepcion['cabecera_id'] : null;
+
+                    $resolvedSubvariableId = null;
+                    if ($subvariableKey !== null) {
+                        if (is_numeric($subvariableKey)) {
+                            $resolvedSubvariableId = (int) $subvariableKey;
+                        } elseif (isset($mapSubvariables[$subvariableKey])) {
+                            $resolvedSubvariableId = $mapSubvariables[$subvariableKey];
                         }
-                    } else {
-                        $cabnew = new Cabecera();
-                        $cabnew->descripcion = $cabData['descripcion'];
-                        $cabnew->variable_id = $variable->id;
-                        $cabnew->cabecera_id = null;
-                        $cabnew->estado = 'activo';
-                        $cabnew->save();
-                        if (isset($cabData['id'])) {
-                            $mapIds[$cabData['id']] = $cabnew->id;
+                    }
+
+                    $resolvedCabeceraId = null;
+                    if ($cabeceraKey !== null) {
+                        if (is_numeric($cabeceraKey)) {
+                            $resolvedCabeceraId = (int) $cabeceraKey;
+                        } elseif (isset($mapCabeceras[$cabeceraKey])) {
+                            $resolvedCabeceraId = $mapCabeceras[$cabeceraKey];
                         }
+                    }
+                    
+                    if ($resolvedSubvariableId && $resolvedCabeceraId) {
+                        Excepcion::create([
+                            'subvariable_id' => $resolvedSubvariableId,
+                            'cabecera_id' => $resolvedCabeceraId,
+                        ]);
                     }
                 }
             }
