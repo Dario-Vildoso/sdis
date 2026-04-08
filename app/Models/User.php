@@ -58,6 +58,6 @@ class User extends Authenticatable
     }   
     public function alcances()
     {
-        return $this->hasMany(Alcance::class, 'usuario_id');
+        return $this->hasOne(Alcance::class, 'usuario_id');
     }
 }

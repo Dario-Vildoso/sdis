@@ -25,34 +25,106 @@
     <style>
         /* Sidebar oscuro personalizado */
         .bg-menu-dark {
-            background: linear-gradient(135deg, #020617 0%, #041744 100%) !important; /* degradado azul oscuro tipo Materio Pro */
-        }
-
-        /* Navbar oscuro */
-        .navbar-dark.bg-menu-dark {
-            background-color: #020617 !important;
+            /* background: linear-gradient(135deg, #575a68 0%, #353f55 100%) !important; degradado azul oscuro tipo Materio Pro */
+            background: white !important;
+            box-shadow: #0000001a 0px 1px 10px;
         }
 
         /* Texto sidebar */
         .menu-item .menu-link {
-            color: #e5e7eb;
+            color: #6e6e6e;
         }
 
         .menu-item.active > .menu-link {
-            background-color: rgba(255,255,255,0.08);
+            border-radius: 40px !important;
+            background: linear-gradient(90deg, #086375, #1dd3b0) !important;
+            margin-right: 0px !important;
+            margin-left: 20px;
+            box-shadow: #139b929a 0px 0px 10px !important;
         }
 
-        /* Hover en sidebar */
-        .menu-link:hover {
+        .menu-item a.menu-link {
+            transition: all 0.3s ease;
+        }
+        .menu-item a.menu-link:hover {
             color: #020617;
+            transform: translateX(10px);
+        }
+
+        .navbar-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background-color: white !important;
+        }
+        
+        .card-action {
+            background: linear-gradient(90deg, #086375, #1dd3b0) !important;
+        }
+
+        .card-action .card-title {
+            color: white;
+        }
+
+        .card-action .btn-card-action {
+            border-radius: 40px;
+            background-color: #e9ecef;
+            width: 100%;                 /* quitamos el none */
+            /* Sombra interior (inset) + sombra exterior suave */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;   /* para que se sienta interactivo */
+        }
+
+        /* Efecto al hacer hover (opcional pero muy recomendado) */
+        .card-action .btn-card-action:hover {
+            background-color:   #ffffff;
+        }
+
+        /* Efecto al presionar (active) */
+        .card-action .btn-card-action:active {
+            box-shadow: 
+                inset 0 5px 10px rgba(0, 0, 0, 0.25),
+                inset 0 -1px 2px rgba(255, 255, 255, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .card-info .card-header {
+            padding: 10px 20px;
+            color: white;
+        }
+        
+        .card-info .card-body {
+            padding: 0px;
+        }
+
+        .card-info .badge {
+            border-radius: 20px;
+            background: white !important;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.24);
+        }
+
+        .card-info .icon-box {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #17a2b8;
+            color: white;
         }
         
         /* Buscador */
         .dataTables_filter input {
-            border-radius: 0px;
+            border-radius: 20px;
             border: rgba(67, 89, 113, 0);
-            border-bottom: 1px solid #d9dee3;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.15);
             padding: 6px 12px;
+        }
+
+        .dataTables_filter input:focus {
+            outline: none;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.25);
         }
         
         .table.table-materio thead th.id-header {
@@ -61,14 +133,16 @@
             width: 10px;
         }
 
+        .table.table-materio thead th {
+            background: #139b92 !important;
+            color: white;
+        }
         .table.table-materio thead th.actions {
-            background: #ff4d00 !important;
-            width: 120px;
+            background: #086375 !important;
+            color: white;
+            width: 5rem;
         }
-        
-        .table.table-materio tbody td.data {
-            background: linear-gradient(90deg, #d9dee3 0%, #ffffff 30%);
-        }
+
         
         .table.table-materio tbody td.id-cell{
             padding: 0px 0px 0px 10px;
@@ -94,7 +168,7 @@
             border-radius: 50% 0 0 50%;
             font-size: 12px;
             color: #ffffff;
-            background: linear-gradient(90deg, #ffc107, #ff9800);
+            background-color: #17a2b8;
             font-weight: 500;
         }
 
@@ -141,12 +215,38 @@
         .table.table-materio tbody tr:hover {
             background-color: #f5f5f9;
         }
+        .table.table-materio tbody .badge {
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        .table.table-materio tbody .badge:hover {
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
 
         /* Paginación */
         .dataTables_paginate .pagination .page-link {
-            border-radius: 6px !important;
+            border-radius: 20px !important;
             margin: 0 3px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
+        .dataTables_paginate .pagination .page-link:hover {
+            background: #139b9244;
+            color: white;
+            box-shadow: 0 0 10px #139b9248;
+        }
+        .dataTables_paginate .pagination .active .page-link {
+            background: #139b92 ;
+            box-shadow: 0 0 10px #139b929a;
+        }
+
+        .dt-buttons .btn {
+            border-radius: 20px;
+            color: white;
+            border: none;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
         .btn-icon {
             border: none;
             background: none;
@@ -160,13 +260,29 @@
         .btn-icon:hover i {
             transform: scale(1.3);
         }
-        table.table-materio thead th {
-            background: linear-gradient(90deg, #ff9800, #ffc107);
-            border-radius: 20px 20px 0 0;
-            color: #fff;
-            font-weight: 600;
-            border: 2px solid white;
+
+        /* Modal */
+        .modal-content .input-group-text {
+            border: none;
+            color: white;
+            border-radius: 5rem;
         }
+
+        .modal-content select,
+        .modal-content input{
+            border: none;
+            border-radius: 50rem;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.15);
+
+        }
+
+        .modal-content .btn{
+            border: none;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
         [contenteditable="true"] {
             cursor: text;
             outline: 2px dashed transparent;

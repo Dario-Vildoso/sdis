@@ -20,13 +20,21 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::all();
+        $users = User::with('alcances')->get();
+        $conteos = [
+            'red'            => $users->where('alcances.tipo', 'red')->count(),
+            'municipio'      => $users->where('alcances.tipo', 'municipio')->count(),
+            'establecimiento'=> $users->where('alcances.tipo', 'establecimiento')->count(),
+        ];
         $roles = Role::all();
         $establecimientos = Establecimiento::all();
         $municipios = Municipio::all();
         $redes = Red::all();
         $alcances = Alcance::all();
-        return view('users.index', compact('users', 'roles', 'establecimientos', 'municipios', 'redes'));
+         $users->each(function ($user) use ($alcances) {
+            $user->alcance = $alcances->where('usuario_id', $user->id)->first();
+        });
+        return view('users.index', compact('users', 'roles', 'establecimientos', 'municipios', 'redes', 'conteos'));
     }
 
     /**

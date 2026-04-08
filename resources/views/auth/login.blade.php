@@ -1,6 +1,6 @@
 <x-guest-layout>
 
-    <h4 class="mb-2">Bienvenido</h4>
+    <h4 class="mb-2"></h4>
 
     <x-auth-session-status class="mb-3" :status="session('status')" />
 
@@ -8,9 +8,9 @@
         @csrf
 
         <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" required autofocus>
-            <x-input-error :messages="$errors->get('email')" class="text-danger mt-1" />
+            <label class="form-label">Nombre de usuario</label>
+            <input type="text" name="name" class="form-control" required autofocus autocomplete="username">
+            <x-input-error :messages="$errors->get('name')" class="text-danger mt-1" />
         </div>
 
         <div class="mb-3">

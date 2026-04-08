@@ -1,15 +1,14 @@
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-dark">
 
-    <div class="app-brand demo">
-        <a href="{{ url('/') }}" class="app-brand-link">
-            <span class="app-brand-text demo menu-text fw-bold ms-2">
-                Materio
-            </span>
-        </a>
+    <div class="text-center py-4" style="background: linear-gradient(90deg, #086375, #1dd3b0) !important;">
+        <img src="{{ asset('assets/img/sedes.png') }}" alt="Logo" style="max-width: 100px; width: 100%;">
+        
+            <span class="fw-bold" style="color: white; font-size: 26px;">SDIS</span>
     </div>
-
-    <div class="menu-inner-shadow"></div>
-
+        <div class="menu-header">
+            <span class="menu-header-text" style="font-size: 18px; color: #ffc107;">Menú Principal</span>
+        </div>
+    
     <ul class="menu-inner">
 
         <li class="menu-item {{ request()->routeIs(['users.*', 'roles.*']) ? 'open' : '' }}">
@@ -95,9 +94,9 @@
                         <div>Reportes</div>
                     </a>
                 </li>
-                <li class="menu-item {{ request()->routeIs('formularios.*') ? 'active' : '' }}">
-                    <a href="{{ route('formularios.menu') }}" class="menu-link">
-                        <i class="menu-icon ri {{ request()->routeIs('formularios.*') ? 'ri-download-fill' : 'ri-download-line' }} bg-warning"></i>
+                <li class="menu-item {{ request()->routeIs('exportaciones.*') ? 'active' : '' }}">
+                    <a href="{{ route('exportaciones.index') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('exportaciones.*') ? 'ri-download-fill' : 'ri-download-line' }} bg-warning"></i>
                         <div>Exportar</div>
                     </a>
                 </li>

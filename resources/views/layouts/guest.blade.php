@@ -12,35 +12,43 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}">
 </head>
 
-<body>
+<body style="background: linear-gradient(135deg, #f5f5f9, #e0e7ff);">
 
-<div class="container-xxl">
-    <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner">
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
 
-            <!-- Card -->
-            <div class="card">
-                <div class="card-body">
+    <div class="card shadow-lg border-0" style="max-width: 800px; width: 100%;">
+        
+        <div class="row g-0">
 
-                    <!-- Logo -->
-                    <div class="app-brand justify-content-center mb-4">
-                        <span class="app-brand-text fw-bold fs-4">
-                            Materio
-                        </span>
-                    </div>
+            {{-- 🔹 COLUMNA IZQUIERDA (FORMULARIO) --}}
+            <div class="col-md-6 p-4" style="background: #f5f5f5;">
 
-                    {{ $slot }}
-
+                <div class="text-center mb-4">
+                    <h4>Bienvenido</h4>
                 </div>
+
+                {{ $slot }}
+
+            </div>
+
+            {{-- 🔹 COLUMNA DERECHA (LOGO) --}}
+            <div class="col-md-6 d-flex align-items-center justify-content-center text-white"
+     >
+
+                <div class="text-center p-4">
+                    <img src="{{ asset('assets/img/sedes.jpg') }}" 
+                         alt="Logo" 
+                         style="max-width: 300px; width: 100%;">
+                    
+                </div>
+
             </div>
 
         </div>
-    </div>
-</div>
 
-<!-- Materio JS -->
-<script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
-<script src="{{ asset('assets/js/main.js') }}"></script>
+    </div>
+
+</div>
 
 </body>
 </html>
