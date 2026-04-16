@@ -85,15 +85,15 @@
     </div>
 </div>
 
-<div class="card" style="padding: 20px">
+<div class="card mb-3" style="padding: 20px;">
     <div class="table-responsive">
         <table id="usersTable" class="table table-sm table-bordered table-stripped small table-materio">
             <thead>
             <tr>
                 <th class="id-header"></th>
                 <th>Nombre</th>
-                <th>Email</th>
                 <th>Roles</th>
+                <th>Estado</th>
                 <th class="actions">Acciones</th>
             </tr>
             </thead>
@@ -120,7 +120,6 @@
                         </div>
                     </td>
                     <td class="data">{{ $user->name }}</td>
-                    <td class="data">{{ $user->email }}</td>
                     <td class="data">
                         @if($user->roles && $user->roles->count() > 0)
                             @foreach($user->roles as $role)
@@ -129,6 +128,11 @@
                         @else
                             <span class="text-muted small">Sin roles</span>
                         @endif
+                    </td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $user->id }}" data-id="{{ $user->id }}" {{ $user->estado ? 'checked' : '' }}>
+                        </div>
                     </td>
                     <td>
                         <button type="button"
@@ -140,6 +144,7 @@
                                 data-rol-id="{{ $user->roles()->first()?->id }}"
                                 data-tipo="{{ $user->alcances()->first()?->tipo }}"
                                 data-alcance="{{ $user->alcances()->first()?->alcance_id }}"
+                                data-sistemas="{{ json_encode($user->sistemas()->pluck('sistema_id')) }}"
                                 data-bs-toggle="modal" data-bs-target="#userModal"
                                 >
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
@@ -160,6 +165,126 @@
         </table>
     </div>
 </div>
+@if(! Auth::user()->hasRole('super-admin'))
+<div class="card" style="padding: 20px;">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fs-5 ri ri-user-unfollow-line bg-secondary text-white"></i> Usuarios sin sistema asignado
+        </h6>
+    </div>
+    <div class="table-responsive">
+        <table id="unsignedUsersTable" class="table table-sm table-bordered table-stripped small table-materio">
+            <thead>
+            <tr>
+                <th class="id-header"></th>
+                <th>Nombre</th>
+                <th>Roles</th>
+                <th class="actions">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach($unsignedUsers as $user)
+                <tr>
+                    <td class="id-cell">
+                        <div 
+                        @switch($user->alcances->tipo ?? '')
+                            @case('red')
+                                style="background: linear-gradient(90deg, #037ed6, #0066ae); color: white;"
+                                @break
+                            @case('municipio')
+                                style="background: linear-gradient(90deg, #ffc107, #ff9800); color: white;"
+                                @break
+                            @case('establecimiento')
+                                style="background: linear-gradient(90deg, #1ab817, #019617); color: white;"
+                                @break
+                            @default
+                                style="background: linear-gradient(90deg, #6c757d, #495057); color: white;"
+                        @endswitch
+                        >
+                            <strong>{{ $user->id }}</strong>
+                        </div>
+                    </td>
+                    <td class="data">{{ $user->name }}</td>
+                    <td class="data">
+                        @if($user->roles && $user->roles->count() > 0)
+                            @foreach($user->roles as $role)
+                                <span class="badge bg-info me-1 small">{{ $role->name }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-muted small">Sin roles</span>
+                        @endif
+                    </td>
+                    <td class="justify-content-center d-flex">
+
+                        <form action="{{ route('users.assignsystem', $user) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('PUT')
+                            <button class="btn-icon" type="submit" title="Asignar al sistema"
+                                onclick="return confirm('¿Asignar Usuario al Sistema?')">
+                                <i class="ri ri-add-fill fs-4 bg-success"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+<script>
+    // AJAX setup for CSRF token
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    $(function () {
+        // Handle toggle change
+        $(document).on('change', '.toggle-estado', function () {
+            var checkbox = $(this);
+            var id = checkbox.data('id');
+            var url = "{{ url('users') }}" + '/' + id + '/toggle';
+
+            // Optimistic UI: disable during request
+            checkbox.prop('disabled', true);
+
+            var token = $('meta[name="csrf-token"]').attr('content');
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: token,
+                    _method: 'PATCH'
+                },
+                success: function (res) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'bottom-end',
+                        icon: 'success',
+                        title: 'Estado actualizado',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                },
+                error: function (xhr) {
+                    // Revert checkbox on error
+                    checkbox.prop('checked', !checkbox.prop('checked'));
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo actualizar el estado.'
+                    });
+                },
+                complete: function () {
+                    checkbox.prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>
 <script>
 $(function () {
     var table = $("#usersTable").DataTable({
@@ -216,6 +341,45 @@ $(function () {
 
     // Mover los botones a la izquierda (opcional)
     table.buttons().container().appendTo('#usersTable_wrapper .col-md-6:eq(0)');
+    var table = $("#unsignedUsersTable").DataTable({
+        "pageLength": 5,                    // Cambié de 6 a 10 (más estándar)
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "language": {
+            "emptyTable": "No hay información",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+            "infoFiltered": "(Filtrado de _MAX_ total registros)",
+            "infoPostFix": "",
+            "thousands": ",",
+            "lengthMenu": "",
+            "loadingRecords": "Cargando...",
+            "processing": "Procesando...",
+            "search": '<i class="ri ri-search-line"></i>',
+            "searchPlaceholder": "Buscar...",
+            "zeroRecords": "Sin resultados encontrados",
+            
+            "paginate": {
+                "first": "Primero",
+                "last": "Ultimo",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            }
+            
+        },
+        
+        "responsive": true, "lengthChange": true, "autoWidth": false,
+
+        
+        // === BOTONES (Exportar + Acciones) ===
+        
+        // Opciones recomendadas para mejor experiencia
+        "pagingType": "full_numbers",
+        "scrollX": true,                    // Útil si tienes muchas columnas
+        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
+    });
+
+    // Mover los botones a la izquierda (opcional)
+    table.buttons().container().appendTo('#unsignedUsersTable_wrapper .col-md-6:eq(0)');
 });
 </script>
 
@@ -237,7 +401,7 @@ $(function () {
                     @csrf
                     <input type="hidden" name="_method" id="formMethod" value="">
 
-                    <div class="row g-3">
+                    <div class="row g-3 mb-3">
 
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Nombre de Usuario</label>
@@ -334,18 +498,31 @@ $(function () {
                                 </select>
                             </div>
                         </div>
-
+                        @if(Auth::user()->hasRole('super-admin'))
+                        <hr>
+                            <!-- Sistema -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium">Sistemas de Usuario</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-black"><i class="ri ri-settings-line"></i></span>
+                                <select class="form-select" id="userSistemas" name="sistemas[]" multiple size="1">
+                                    @foreach($sistemas as $sistema)
+                                        <option value="{{ $sistema->id }}">{{ $sistema->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4" id="userSubmit" style="background-color: #139b92;">
+                            <i class="ri ri-save-line me-2"></i>Guardar Usuario
+                        </button>
                     </div>
                 </form>
-            </div>
-
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-                    Cancelar
-                </button>
-                <button type="button" class="btn btn-primary px-4" id="userSubmit" style="background-color: #139b92;">
-                    <i class="ri-save-line me-2"></i>Guardar Usuario
-                </button>
             </div>
         </div>
     </div>
@@ -410,6 +587,7 @@ $(function () {
                         // alert(tipo)
                         var alcance = $(this).data('alcance');
                         // alert(alcance)
+                        var sistemas = $(this).data('sistemas');
                         $('#userModalLabel').text('Editar usuario');
                         $('#userForm').attr('action', baseUrl + '/' + id);
                         $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
@@ -442,6 +620,7 @@ $(function () {
                                     break;
                             }
                         }
+                        $('#userSistemas').val(sistemas);
                         $('#userSubmit').text('Actualizar');
 
                 });

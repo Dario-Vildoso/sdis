@@ -18,6 +18,14 @@ class Formulario extends Model
     {
         return $this->hasMany(Periodo::class, 'formulario_id');
     }
+    public function sistema()
+    {
+        return $this->belongsTo(Sistema::class);
+    }
+     public function asignaciones()
+    {
+        return $this->hasMany(Asignacion::class, 'formulario_id');
+    }
     public function variables()
     {
         return $this->belongsToMany(Variable::class, 'asignacions', 'formulario_id', 'variable_id');

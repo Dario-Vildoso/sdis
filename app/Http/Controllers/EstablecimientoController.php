@@ -43,10 +43,20 @@ class EstablecimientoController extends Controller
         $establecimiento->id_mun = $municipio->id;
         $establecimiento->codigo_est = $request->codigo_est;
         $establecimiento->gestion = $request->gestion;
+        $establecimiento->nivel = $request->nivel;
+        $establecimiento->estado = true; // Activo por defecto
         $establecimiento->created_at = Carbon::now();
         $establecimiento->updated_at = Carbon::now();
         $establecimiento->save();
         return redirect()->route('establecimientos.index')->with('success', 'Establecimiento creado exitosamente.');
+    }
+
+    public function toggle(Request $request, $id)
+    {
+        $establecimiento = Establecimiento::findOrFail($id);
+        $establecimiento->estado = !$establecimiento->estado;
+        $establecimiento->save();
+        return response()->json(['success' => true, 'estado' => $establecimiento->estado]);
     }
     /**
      * Display the specified resource.
@@ -75,11 +85,13 @@ class EstablecimientoController extends Controller
             'id_mun' => 'required|integer|exists:municipios,id',
             'codigo_est' => 'required|string|max:50|unique:establecimientos,codigo_est,'.$establecimiento->id,
             'gestion' => 'required|string|max:50',
+            'nivel' => 'required|integer|min:1|max:3',
         ]);
         $establecimiento->descripcion = $request->descripcion;
         $establecimiento->id_mun = $request->id_mun;
         $establecimiento->codigo_est = $request->codigo_est;
         $establecimiento->gestion = $request->gestion;
+        $establecimiento->nivel = $request->nivel;
         $establecimiento->updated_at = Carbon::now();
         $establecimiento->save();
         return redirect()->route('establecimientos.index')->with('success', 'Establecimiento actualizado exitosamente.');

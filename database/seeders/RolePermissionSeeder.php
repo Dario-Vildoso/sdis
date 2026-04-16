@@ -62,6 +62,11 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Crear roles
+        $superAdmin = Role::firstOrCreate(
+            ['slug' => 'super-admin'],
+            ['name' => 'Super Administrador', 'description' => 'Acceso total sin restricciones']
+        );
+
         $admin = Role::firstOrCreate(
             ['slug' => 'admin'],
             ['name' => 'Administrador', 'description' => 'Gestion copleta de usuarios y formularios']
@@ -74,6 +79,7 @@ class RolePermissionSeeder extends Seeder
 
         // Asignar permisos a roles
         $allPermissions = Permission::all()->pluck('id')->toArray();
+        $superAdmin->permissions()->sync($allPermissions);
         $admin->permissions()->sync($allPermissions);
 
         $reportsPermissions = Permission::whereIn('slug', [
@@ -85,24 +91,30 @@ class RolePermissionSeeder extends Seeder
         ])->pluck('id')->toArray();
         $reports->permissions()->sync($reportsPermissions);
 
+        // Crear usuario super-admin
+        $superAdminUser = User::firstOrCreate(
+            ['name' => 'Super Admin'],
+            [
+                'password' => bcrypt('superadmin1234'),
+            ]
+        );
+        $superAdminUser->assignRole('super-admin');
+
         // Crear usuario administrador
         $adminUser = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+            ['name' => 'Administrador'],
             [
-                'name' => 'Administrador',
                 'password' => bcrypt('admin1234'),
             ]
         );
-
         // Asignar rol
         $adminUser->assignRole('admin');
 
 
         // Crear usuario de reportes
         $establecimietoUser = User::firstOrCreate(
-            ['email' => 'Establecimiento@example.com'],
+            ['name' => 'Establecimiento'],
             [
-                'name' => 'Establecimiento',
                 'password' => bcrypt('establecimiento1234'),
             ]
         );
@@ -111,9 +123,8 @@ class RolePermissionSeeder extends Seeder
 
         // Crear usuario de reportes
         $municipioUser = User::firstOrCreate(
-            ['email' => 'Municipio@example.com'],
+            ['name' => 'Municipio'],
             [
-                'name' => 'Municipio',
                 'password' => bcrypt('municipio1234'),
             ]
         );
@@ -122,9 +133,8 @@ class RolePermissionSeeder extends Seeder
 
         // Crear usuario de reportes
         $redUser = User::firstOrCreate(
-            ['email' => 'red@example.com'],
+            ['name' => 'Red'],
             [
-                'name' => 'Red',
                 'password' => bcrypt('redes1234'),
             ]
         );

@@ -54,7 +54,7 @@
                                 <option value="">Seleccione...</option>
                                 @foreach($formularios as $item)
                                     <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
-                                        {{ $item->nombre }}
+                                        {{ $item->sistema->nombre ?? 'Sin sistema' }} - {{ $item->gestion->nombre ?? 'Sin gestión' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -202,6 +202,15 @@
                                     data-variable-id="{{ $row['variable']->id }}"
                                 >
                             </div>
+                        </div>
+
+                        @php
+                            $exportParams = array_merge(['variable' => $row['variable']->id], request()->query());
+                        @endphp
+                        <div class="d-flex justify-content-end mb-3">
+                            <a href="{{ route('reportes.export', $exportParams) }}" class="btn btn-success btn-sm">
+                                <i class="ri ri-file-excel-2-line"></i> Exportar Excel
+                            </a>
                         </div>
 
                         <div class="table-responsive">

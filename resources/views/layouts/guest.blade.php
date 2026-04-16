@@ -10,9 +10,10 @@
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}">
 </head>
 
-<body style="background: linear-gradient(135deg, #f5f5f9, #e0e7ff);">
+<body style="background: linear-gradient(135deg, #f5f5f9, #e0f2ff);">
 
 <div class="container d-flex align-items-center justify-content-center" style="min-height: 100vh;">
 

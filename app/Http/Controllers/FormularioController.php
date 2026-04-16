@@ -19,7 +19,7 @@ class FormularioController extends Controller
      */
     public function index()
     {   
-        $formularios = Formulario::all();
+        $formularios = Formulario::all()->where('sistema_id', Auth::user()->sistema_id);
         $gestiones = Gestion::all();
         return view('formularios.index', compact('formularios', 'gestiones'));
     }
@@ -38,11 +38,10 @@ class FormularioController extends Controller
     public function store(Request $request)
     {
         request()->validate([
-            'nombre' => 'required|string|max:255',
             'gestion_id' => 'required|exists:gestions,id',
         ]);
         $formulario = new Formulario();
-        $formulario->nombre = $request->nombre;
+        $formulario->sistema_id = Auth::user()->sistema_id;
         $formulario->gestion_id = $request->gestion_id;
         $formulario->created_at = Carbon::now();
         $formulario->updated_at = Carbon::now();
@@ -51,7 +50,7 @@ class FormularioController extends Controller
     }
     public function menu()
     {
-        $formularios = Formulario::all();
+        $formularios = Formulario::all()->where('sistema_id', Auth::user()->sistema_id);
         $gestiones = Gestion::all();
         return view('formularios.menu', compact('formularios', 'gestiones'));
     }
@@ -182,10 +181,8 @@ class FormularioController extends Controller
     {
         $formulario = Formulario::findOrFail($id);
         request()->validate([
-            'nombre' => 'required|string|max:255' . $formulario->id,
             'gestion_id' => 'required|exists:gestions,id',
         ]);
-        $formulario->nombre = $request->nombre;
         $formulario->gestion_id = $request->gestion_id;
         $formulario->updated_at = Carbon::now();
         $formulario->save();

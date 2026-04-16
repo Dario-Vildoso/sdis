@@ -195,7 +195,7 @@
         .table.table-materio thead th.button-cell-right div{
             /* width: 40px;
             height: 40px; */
-            
+            border: none;
             padding-right: 10px;
             text-align: right;
             justify-content: right;
@@ -261,7 +261,6 @@
             transform: scale(1.3);
         }
 
-        /* Modal */
         .modal-content .input-group-text {
             border: none;
             color: white;
@@ -298,6 +297,7 @@
             background-color: #e7f3ff2a;
             outline: 2px solid #df5307;
         }
+
     </style>
 </head>
 @stack('scripts')

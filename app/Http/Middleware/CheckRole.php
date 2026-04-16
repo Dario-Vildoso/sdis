@@ -18,7 +18,12 @@ class CheckRole
             return redirect('login');
         }
 
-        if (!$request->user()->hasAnyRole($roles)) {
+        $rolesArray = [];
+        foreach ($roles as $role) {
+            $rolesArray = array_merge($rolesArray, explode('|', $role));
+        }
+
+        if (!$request->user()->hasAnyRole($rolesArray)) {
             abort(403, 'No tienes permiso para acceder a este recurso.');
         }
 

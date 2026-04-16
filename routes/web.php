@@ -32,34 +32,42 @@
      Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
      Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
  });
- Route::middleware(['auth'])->group(function () {
-     Route::resource('users', UserController::class);
-     Route::resource('roles', RoleController::class);
-     Route::post('roles/{role}/assign-user', [RoleController::class, 'assignToUser'])->name('roles.assignToUser');
-     Route::delete('roles/{role}/remove-user', [RoleController::class, 'removeFromUser'])->name('roles.removeFromUser');
-     
-     Route::resource('establecimientos', EstablecimientoController::class);
-     Route::resource('gestiones', GestionController::class);
-     Route::resource('formularios', FormularioController::class);
-     Route::resource('periodos', PeriodoController::class);
-     Route::patch('periodos/{periodo}/toggle', [PeriodoController::class, 'toggle'])->name('periodos.toggle');
-     Route::resource('variables', VariableController::class);
-     Route::get('variables/{variable}/subvariables', [VariableController::class, 'getSubvariables'])->name('variables.subvariables');
-     Route::get('variables/{variable}/cabeceras', [VariableController::class, 'getCabeceras'])->name('variables.cabeceras');
-     Route::resource('subvariables', SubVariableController::class);
-     Route::resource('cabeceras', CabeceraController::class);
-     Route::get('formulario/menu', [FormularioController::class, 'menu'])->name('formularios.menu');
-     Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
-     Route::get('exportaciones', [ExportacionController::class, 'index'])->name('exportaciones.index');
-     Route::post('exportaciones', [ExportacionController::class, 'export'])->name('exportaciones.export');
-     Route::get('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'cargarPeriodo'])->name('formularios.periodo');
-     Route::post('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'storeData'])->name('formularios.guardarPeriodo');
-     Route::get('formulario/{formulario}/asignar-variables', [FormularioController::class, 'asignarVariables'])->name('formularios.asignarVariables');
-     Route::post('/formularios/add-variable', [FormularioController::class, 'addVariable'])->name('formularios.addVariable');
-     Route::post('/formularios/remove-variable', [FormularioController::class, 'removeVariable'])->name('formularios.removeVariable');
-     Route::post('/asignaciones/create-variable-form/{form}', [AsignacionController::class, 'createVariableForm'])->name('asignaciones.createVarForm');
-     Route::get('variables/{variable}/tabla', [VariableController::class, 'tabla'])->name('variables.tabla');
-     Route::post('variables/{variable}/tabla', [VariableController::class, 'guardarTabla'])->name('variables.guardarTabla');
- });
+Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
+    Route::resource('users', UserController::class);
+    Route::put('users/{user}/assignsystem', [UserController::class, 'assignSystem'])->name('users.assignsystem');
+    Route::patch('users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
+    Route::resource('roles', RoleController::class);
+    Route::post('roles/{role}/assign-user', [RoleController::class, 'assignToUser'])->name('roles.assignToUser');
+    Route::delete('roles/{role}/remove-user', [RoleController::class, 'removeFromUser'])->name('roles.removeFromUser');
+    
+    Route::resource('establecimientos', EstablecimientoController::class);
+    Route::patch('establecimientos/{establecimiento}/toggle', [EstablecimientoController::class, 'toggle'])->name('establecimientos.toggle');
+    Route::resource('formularios', FormularioController::class);
+    Route::resource('periodos', PeriodoController::class);
+    Route::patch('periodos/{periodo}/toggle', [PeriodoController::class, 'toggle'])->name('periodos.toggle');
+    Route::resource('subvariables', SubVariableController::class);
+    Route::resource('cabeceras', CabeceraController::class);
+    Route::get('exportaciones', [ExportacionController::class, 'index'])->name('exportaciones.index');
+    Route::post('exportaciones', [ExportacionController::class, 'export'])->name('exportaciones.export');
+    Route::resource('gestiones', GestionController::class);
+    Route::resource('variables', VariableController::class);
+    Route::get('variables/{variable}/subvariables', [VariableController::class, 'getSubvariables'])->name('variables.subvariables');
+    Route::get('variables/{variable}/cabeceras', [VariableController::class, 'getCabeceras'])->name('variables.cabeceras');
+    Route::get('variables/{variable}/tabla', [VariableController::class, 'tabla'])->name('variables.tabla');
+    Route::post('variables/{variable}/tabla', [VariableController::class, 'guardarTabla'])->name('variables.guardarTabla');
+    Route::post('/formularios/add-variable', [FormularioController::class, 'addVariable'])->name('formularios.addVariable');
+    Route::post('/formularios/remove-variable', [FormularioController::class, 'removeVariable'])->name('formularios.removeVariable');
+    Route::post('/asignaciones/create-variable-form/{form}', [AsignacionController::class, 'createVariableForm'])->name('asignaciones.createVarForm');
+    Route::get('oportunidad-informacion', [ReporteController::class, 'oportunidad'])->name('reportes.oportunidad');
+    });
+    
+    Route::middleware(['auth'])->group(function () {
+        Route::get('formulario/menu', [FormularioController::class, 'menu'])->name('formularios.menu');
+        Route::get('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'cargarPeriodo'])->name('formularios.periodo');
+        Route::post('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'storeData'])->name('formularios.guardarPeriodo');
+        Route::get('formulario/{formulario}/asignar-variables', [FormularioController::class, 'asignarVariables'])->name('formularios.asignarVariables');
+        Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('reportes/export/{variable}', [ReporteController::class, 'exportVariable'])->name('reportes.export');
+        });
  
  require __DIR__.'/auth.php';

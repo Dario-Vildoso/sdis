@@ -29,6 +29,7 @@ class LoginRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
+            'sistema_id' => ['nullable', 'integer', 'exists:sistemas,id'],
         ];
     }
 

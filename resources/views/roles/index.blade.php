@@ -53,27 +53,26 @@
                                                     {{ $role->users->count() }} usuarios
                                                 </span>
                                             </td>
-                                            <td class=>
+                                            <td>
                                                 <div class="dropdown">
-                                                    <button type="button" class="btn-icon">
-                                                        <a href="{{ route('roles.show', $role) }}">
-                                                            <i class="ri ri-eye-line bg-info"></i>
-                                                        </a>
-                                                    </button>
-                                                    <button type="button" class="btn-icon">
-                                                        <a class="dropdown-item" href="{{ route('roles.edit', $role) }}">
-                                                            <i class="ri ri-pencil-line bg-success"></i>
-                                                        </a>
-                                                    </button>
+                                                        <button type="button" class="btn-icon">
+                                                            <a href="{{ route('roles.show', $role) }}">
+                                                                <i class="ri ri-eye-line bg-info"></i>
+                                                            </a>
+                                                        </button>
+                                                        <button type="button" class="btn-icon">
+                                                            <a href="{{ route('roles.edit', $role) }}">
+                                                                <i class="ri ri-pencil-line bg-success"></i>
+                                                            </a>
+                                                        </button>
 
-                                                            <form action="{{ route('roles.destroy', $role) }}" method="POST" style="display: inline;">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn-icon" onclick="return confirm('¿Estás seguro?')">
-                                                                    <i class="ri ri-delete-bin-line bg-danger"></i> 
-                                                                </button>
-                                                            </form>
-                                                    </div>
+                                                        <form action="{{ route('roles.destroy', $role) }}" method="POST" style="display: inline;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn-icon" onclick="return confirm('¿Estás seguro?')">
+                                                                <i class="ri ri-delete-bin-line bg-danger"></i> 
+                                                            </button>
+                                                        </form>
                                                 </div>
                                             </td>
                                         </tr>

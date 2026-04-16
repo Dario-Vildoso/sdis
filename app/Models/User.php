@@ -21,7 +21,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
         'password',
         'status',
     ];
@@ -59,5 +58,13 @@ class User extends Authenticatable
     public function alcances()
     {
         return $this->hasOne(Alcance::class, 'usuario_id');
+    }
+    public function sistema()
+    {
+        return $this->belongsTo(Sistema::class);
+    }
+    public function sistemas()
+    {
+        return $this->belongsToMany(Sistema::class, 'user_sistemas');
     }
 }

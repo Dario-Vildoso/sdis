@@ -16,14 +16,21 @@
         }, 3000);
     </script>
 @endif
-
-<button id="btnNewData" type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#dataModal">
-    <i class="ri ri-add-line fs-4"></i>
-    Nueva Sub-Variable
-</button>
-
+    <div class="col-md-4 mb-4">
+        <div class="card card-action">
+            <div class="card-body">
+                <h5 class="card-title">Crear una nueva sub-variable</h5>
+            </div>
+            <div class="card-footer">
+                <button id="btnNewData" type="button" class="btn btn-card-action" data-bs-toggle="modal" data-bs-target="#dataModal">
+                    <i class="ri ri-add-line fs-5"></i>&nbsp;&nbsp;&nbsp;Nueva Sub-Variable
+                </button>
+            </div>
+        </div>
+    </div>
+<div class="card" style="padding: 20px">
     <div class="table-responsive">
-        <table id="dataTable" class="table table-sm small table-materio">
+        <table id="dataTable" class="table table-sm table-bordered table-stripped small table-materio">
             <thead>
             <tr>
                 <th class="id-header"></th>
@@ -68,7 +75,7 @@
                         </td>
                         <td>
                             <button type="button"
-                                    class="btn btn-icon edit-data"
+                                    class="btn-icon edit-data"
                                     data-id="{{ $subvariable->id }}"
                                     data-descripcion="{{ $subvariable->descripcion }}"
                                     data-variable-id="{{ $subvariable->variable_id }}"
@@ -79,7 +86,7 @@
                             <form action="{{ route('subvariables.destroy', $subvariable) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-icon" type="submit"
+                                <button class="btn-icon" type="submit"
                                     onclick="return confirm('¿Eliminar sub-variable?')">
                                     <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                                 </button>
@@ -91,33 +98,64 @@
             </tbody>
         </table>
     </div>
+</div>
 <script>
-    $(function () {
-        $("#dataTable").DataTable({
-            "pageLength": 6,
-            "language": {
-                "emptyTable": "No hay información",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-                "infoFiltered": "(Filtrado de _MAX_ total registros)",
-                "infoPostFix": "",
-                "thousands": ",",
-                "lengthMenu": "",
-                "loadingRecords": "Cargando...",
-                "processing": "Procesando...",
-                "search": "Buscador:",
-                "zeroRecords": "Sin resultados encontrados",
-                "paginate": {
-                    "first": "Primero",
-                    "last": "Ultimo",
-                    "next": "Siguiente",
-                    "previous": "Anterior"
-                }
-            },
-            "responsive": true, "lengthChange": true, "autoWidth": false,
+$(function () {
+    var table = $("#dataTable").DataTable({
+        "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
+        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "language": {
+            "emptyTable": "No hay información",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+            "infoFiltered": "(Filtrado de _MAX_ total registros)",
+            "infoPostFix": "",
+            "thousands": ",",
+            "lengthMenu": "",
+            "loadingRecords": "Cargando...",
+            "processing": "Procesando...",
+            "search": '<i class="ri ri-search-line"></i>',
+            "searchPlaceholder": "Buscar...",
+            "zeroRecords": "Sin resultados encontrados",
+            
+            "paginate": {
+                "first": "Primero",
+                "last": "Ultimo",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            }
+            
+        },
+        
+        "responsive": true, "lengthChange": true, "autoWidth": false,
 
-        }).buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+        
+        // === BOTONES (Exportar + Acciones) ===
+        "dom": 'Bfrtip',
+        
+        "buttons": [
+            {
+                extend: 'collection',
+                text: '<i class="ri ri-file-excel-line"></i> Exportar',
+                className: 'btn-success btn-sm',
+                buttons: [
+                    { extend: 'excelHtml5', text: 'Excel (.xlsx)', exportOptions: { columns: ':visible' } },
+                    { extend: 'csvHtml5',   text: 'CSV', exportOptions: { columns: ':visible' } },
+                    { extend: 'pdfHtml5',   text: 'PDF', exportOptions: { columns: ':visible' } },
+                    { extend: 'copyHtml5',  text: 'Copiar al portapapeles' }
+                ]
+            }
+        ],
+        
+        // Opciones recomendadas para mejor experiencia
+        "pagingType": "full_numbers",
+        "scrollX": true,                    // Útil si tienes muchas columnas
+        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
     });
+
+    // Mover los botones a la izquierda (opcional)
+    table.buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+});
 </script>
 
 <!-- Modal: Crear / Editar Formulario -->

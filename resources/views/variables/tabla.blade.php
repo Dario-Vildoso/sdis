@@ -17,24 +17,6 @@
     </script>
 @endif
 
-<div class="mb-3 d-flex justify-content-between align-items-center">
-    <div>
-        @if (request()->input('form'))
-        <a href="{{ route('formularios.asignarVariables', request()->input('form')) }}" class="btn btn-secondary btn-sm" title="Volver">
-            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
-        </a>
-        @else
-        <a href="{{ route('variables.index') }}" class="btn btn-secondary btn-sm" title="Volver">
-            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
-        </a>
-        @endif
-    </div>
-    <div>
-        <button type="button" class="btn btn-success btn-sm d-flex" id="btnGuardarCambios" title="Guardar todos los cambios">
-            <i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>
-        </button>
-    </div>
-</div>
 
 @php
 
@@ -82,95 +64,51 @@ $buildRows = function ($cabeceras, $nivel = 0, &$rows = []) use (&$buildRows) {
 $rows = $buildRows($variable->cabeceras);
 @endphp
 
-<form id="formTabla" method="POST" action="{{ route('variables.guardarTabla', $variable) }}">
-    @csrf
+    <form id="formTabla" method="POST" action="{{ route('variables.guardarTabla', $variable) }}">
+        @csrf
+        <div class="card" style="padding: 20px;">
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+        @if (request()->input('form'))
+        <a href="{{ route('formularios.asignarVariables', request()->input('form')) }}" class="btn btn-secondary btn-sm" title="Volver">
+            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
+        </a>
+        @else
+        <a href="{{ route('variables.index') }}" class="btn btn-secondary btn-sm" title="Volver">
+            <i class="ri ri-arrow-left-line"></i> <span>&nbsp;Volver</span>
+        </a>
+        @endif
+    </div>
+    <div>
+        <button type="button" class="btn btn-success btn-sm d-flex" id="btnGuardarCambios" style="box-shadow: 0 0 10px #05c63f7e" title="Guardar todos los cambios">
+            <i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>
+        </button>
+    </div>
+</div>
 
-    <table class="table table-sm small table-materio tabla-editable" id="tablaVariable">
-
-        <thead>
-
-            {{-- Primera fila: Variable + primer nivel --}}
-            <tr>
-                <th class="transparent-cell" style="display: table-cell; width: 40px;" rowspan="{{ $niveles }}" ></th>
-                <th rowspan="{{ $niveles }}"
-                    class="text-center align-middle text-white bg-info variable-header"
-                    style="width: 50%">
-                    <span id="nombreVariable" contenteditable="true" title="Editar nombre de la variable">{{ $variable->descripcion }}</span>
-                </th>
-
-                @foreach($rows[0] ?? [] as $cabecera)
-                    <th colspan="{{ countLeaves($cabecera) }}"
-                        @if($cabecera->hijos->isEmpty())
-                            style="width: 10px"
-                        @endif
-                        class="text-center bg-secondary text-white cabecera-header"
-                        data-cabecera-id="{{ $cabecera->id }}"
-                        data-cabecera-padre="{{ $cabecera->cabecera_id }}"
-                        data-level="0"
-                        >
-                        <div class="d-flex justify-content-center align-items-center gap-2">
-                            <span class="cabecera-nombre" contenteditable="true" title="Editar nombre">{{ $cabecera->descripcion }}</span>
-                            <button type="button" class="btn btn-sm btn-icon btn-eliminar-cabecera" data-cabecera-id="{{ $cabecera->id }}" title="Eliminar cabecera">
-                                <i class="ri fs-4 ri-delete-bin-fill" style="font-size: 0.8rem;"></i>
-                            </button>
-                        </div>
-                    </th>
-                @endforeach
-                <th class="text-muted bg-secondary text-white button-cell-right transparent-cell" 
-                    title="Agregar cabecera" 
-                    data-level="0">
-                    <div id="btnAdd0" style="background: linear-gradient(90deg, #018328, #05c63f); z-index: 2; position: absolute;"
-                        onmouseover="this.style.background='linear-gradient(90deg, #018328, #1eef5d )'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
-                        onmouseout="this.style.background='linear-gradient(90deg, #018328, #05c63f)'; this.style.width='40px'; this.style.transition='all 0.2s ease'"
-                        data-bs-toggle="popover"
-                        data-bs-html="true"
-                        data-bs-placement="top"
-                        data-bs-trigger="click"
-                        data-bs-content='
-                        <div class="d-flex align-items-center gap-2" style="min-width:200px;">
-                            <input 
-                                type="text" 
-                                class="form-control form-control-sm input-nueva-cabecera" 
-                                data-level="0"
-                                placeholder="Nombre de cabecera"
-                            >
-                            <button type="button" class="btn btn-sm btn-success btnAgregarSubCabecera" data-level="0">
-                                +
-                            </button>
-                        </div>
-                        '
-                        >
-                            <i class="fs-5 ri ri-add-fill"></i>
-                    </div>
-                </th>
-            </tr>
-
-            {{-- Niveles siguientes --}}
-            @for($i = 1; $i < $niveles; $i++)
-                <tr>
-                    <!-- <th class="transparent-cell"></th> -->
-                    @foreach($rows[$i] ?? [] as $cabecera)
-
-                        @if($cabecera->hijos->isEmpty())
-                            <th rowspan="{{ $niveles - $i }}"
-                                class="text-center bg-light cabecera-header"
-                                data-cabecera-id="{{ $cabecera->id }}" 
-                                data-cabecera-padre="{{ $cabecera->cabecera_id }}"
-                                data-level="{{ $i }}"
-                                style="width: 10px">
-                                <div class="d-flex justify-content-center align-items-center gap-1">
-                                    <span class="cabecera-nombre" contenteditable="true" title="Editar nombre">{{ $cabecera->descripcion }}</span>
-                                    <button type="button" class="btn btn-sm btn-icon btn-eliminar-cabecera" data-cabecera-id="{{ $cabecera->id }}" title="Eliminar cabecera">
-                                        <i class="ri fs-4 ri-delete-bin-fill" style="font-size: 0.8rem;"></i>
-                                    </button>
-                                </div>
-                            </th>
-                        @else
+        <div class="table-responsive">
+            <table class="table table-sm small table-materio tabla-editable" id="tablaVariable">
+        
+                <thead>
+        
+                    {{-- Primera fila: Variable + primer nivel --}}
+                    <tr>
+                        <th class="transparent-cell" style="display: table-cell; width: 40px;" rowspan="{{ $niveles }}" ></th>
+                        <th rowspan="{{ $niveles }}"
+                            class="text-center align-middle text-white bg-info variable-header"
+                            style="width: 50%">
+                            <span id="nombreVariable" contenteditable="true" title="Editar nombre de la variable">{{ $variable->descripcion }}</span>
+                        </th>
+        
+                        @foreach($rows[0] ?? [] as $cabecera)
                             <th colspan="{{ countLeaves($cabecera) }}"
-                                class="text-center bg-light cabecera-header"
+                                @if($cabecera->hijos->isEmpty())
+                                    style="width: 10px"
+                                @endif
+                                class="text-center bg-secondary text-white cabecera-header"
                                 data-cabecera-id="{{ $cabecera->id }}"
                                 data-cabecera-padre="{{ $cabecera->cabecera_id }}"
-                                data-level="{{ $i }}"
+                                data-level="0"
                                 >
                                 <div class="d-flex justify-content-center align-items-center gap-2">
                                     <span class="cabecera-nombre" contenteditable="true" title="Editar nombre">{{ $cabecera->descripcion }}</span>
@@ -179,80 +117,151 @@ $rows = $buildRows($variable->cabeceras);
                                     </button>
                                 </div>
                             </th>
-                        @endif
-
-                    @endforeach
-                    <th class="text-muted bg-secondary text-white button-cell-right transparent-cell" 
-                        title="Agregar Cabecera" 
-                        style="position: relative;"
-                        data-level="{{ $i }}">
-                        <div id="btnAdd{{ $i }}" style="background: linear-gradient(90deg, #018328, #05c63f); z-index: 2; position: absolute;"
-                            onmouseover="this.style.background='linear-gradient(90deg, #018328, #1eef5d )'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
-                            onmouseout="this.style.background='linear-gradient(90deg, #018328, #05c63f)'; this.style.width='40px'; this.style.transition='all 0.2s ease'"
-                            data-bs-toggle="popover"
-                            data-bs-html="true"
-                            data-bs-placement="top"
-                            data-bs-trigger="click"
-                            data-bs-content='
-                            <div class="d-flex align-items-center gap-2" style="min-width:200px;">
-                                <input 
-                                    type="text" 
-                                    class="form-control form-control-sm input-nueva-cabecera" 
-                                    data-level="{{ $i }}"
-                                    placeholder="Nombre de cabecera"
+                        @endforeach
+                        <th class="text-muted bg-secondary text-white button-cell-right transparent-cell" 
+                            title="Agregar cabecera" 
+                            data-level="0">
+                            <div id="btnAdd0" style="background: linear-gradient(90deg, #018328, #05c63f); z-index: 2; position: absolute;"
+                                onmouseover="this.style.background='linear-gradient(90deg, #018328, #1eef5d )'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
+                                onmouseout="this.style.background='linear-gradient(90deg, #018328, #05c63f)'; this.style.width='40px'; this.style.transition='all 0.2s ease'"
+                                data-bs-toggle="popover"
+                                data-bs-html="true"
+                                data-bs-placement="top"
+                                data-bs-trigger="click"
+                                data-bs-content='
+                                <div class="d-flex align-items-center gap-2" style="min-width:200px;">
+                                    <input 
+                                        type="text" 
+                                        class="form-control form-control-sm input-nueva-cabecera" 
+                                        data-level="0"
+                                        placeholder="Nombre de cabecera"
+                                    >
+                                    <button type="button" class="btn btn-sm btn-success btnAgregarSubCabecera" data-level="0">
+                                        +
+                                    </button>
+                                </div>
+                                '
                                 >
-                                <button class="btn btn-sm btn-success btnAgregarSubCabecera" data-level="{{ $i }}">
-                                    +
-                                </button>
+                                    <i class="fs-5 ri ri-add-fill"></i>
                             </div>
-                            '
-                            >
-                                <i class="fs-5 ri ri-add-fill"></i>
-                        </div>
-                    </th>
-                </tr>
-            @endfor
-
-        </thead>
-
-        <tbody>
-
-            @foreach($variable->subvariables as $subvariable)
-
-                <tr class="subvariable-row" data-subvariable-id="{{ $subvariable->id }}" data-estado="{{ $subvariable->estado ?? 'activo' }}">
-                    <td class="button-cell-left" data-subvariable-id="{{ $subvariable->id }}" title="Eliminar subvariable" style="padding-right: 0; padding-left: 0; display: flex; flex-direction: row-reverse;">
-                        <div class="btn-eliminar-subvariable" style="background: linear-gradient(90deg, #c63805, #830e01); align-items: right;"
-                            onmouseover="this.style.background='linear-gradient(90deg, #e44810, #830e01)'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
-                            onmouseout="this.style.background='linear-gradient(90deg, #c63805, #830e01)'; this.style.width='40px'; this.style.transition='all 0.2s ease'">
-                            <i class="fs-5 ri ri-delete-bin-fill"></i>
-                        </div>
-                    </td>
-                    {{-- Columna Subvariable --}}
-                    <td class="fw-semibold data subvariable-nombre" contenteditable="true" title="Editar nombre">
-                        {{ $subvariable->descripcion }}
-                        <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" data-id="{{ $subvariable->id }}" {{ (isset($subvariable->estado) && $subvariable->estado !== 'activo') ? '' : 'checked' }}>
-                    </td>
-
-                    {{-- Columnas cabeceras (solo lectura) --}}
-                    @for($i = 0; $i < $variable->total_leaf_columns; $i++)
-                        <td class="data celda-dato"></td>
+                        </th>
+                    </tr>
+        
+                    {{-- Niveles siguientes --}}
+                    @for($i = 1; $i < $niveles; $i++)
+                        <tr>
+                            @php
+                                $hue = 176 + ($i * 3);
+                                $saturation = 78 - ($i * 5);
+                                $lightness = 34 - ($i * 2);
+                            @endphp
+                            <!-- <th class="transparent-cell"></th> -->
+                            @foreach($rows[$i] ?? [] as $cabecera)
+        
+                                @if($cabecera->hijos->isEmpty())
+                                    <th rowspan="{{ $niveles - $i }}"
+                                        class="text-center bg-light cabecera-header"
+                                        data-cabecera-id="{{ $cabecera->id }}" 
+                                        data-cabecera-padre="{{ $cabecera->cabecera_id }}"
+                                        data-level="{{ $i }}"
+                                        style="width: 10px; background: {{ "hsl($hue, $saturation%, $lightness%)" }} !important;">
+                                        <div class="d-flex justify-content-center align-items-center gap-1">
+                                            <span class="cabecera-nombre" contenteditable="true" title="Editar nombre">{{ $cabecera->descripcion }}</span>
+                                            <button type="button" class="btn btn-sm btn-icon btn-eliminar-cabecera" data-cabecera-id="{{ $cabecera->id }}" title="Eliminar cabecera">
+                                                <i class="ri fs-4 ri-delete-bin-fill" style="font-size: 0.8rem;"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                @else
+                                    <th colspan="{{ countLeaves($cabecera) }}"
+                                        class="text-center bg-light cabecera-header"
+                                        data-cabecera-id="{{ $cabecera->id }}"
+                                        data-cabecera-padre="{{ $cabecera->cabecera_id }}"
+                                        data-level="{{ $i }}"
+                                        style="background: {{ "hsl($hue, $saturation%, $lightness%)" }} !important;"
+                                        >
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <span class="cabecera-nombre" contenteditable="true" title="Editar nombre">{{ $cabecera->descripcion }}</span>
+                                            <button type="button" class="btn btn-sm btn-icon btn-eliminar-cabecera" data-cabecera-id="{{ $cabecera->id }}" title="Eliminar cabecera">
+                                                <i class="ri fs-4 ri-delete-bin-fill" style="font-size: 0.8rem;"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                @endif
+        
+                            @endforeach
+                            <th class="text-muted bg-secondary text-white button-cell-right transparent-cell" 
+                                title="Agregar Cabecera" 
+                                style="position: relative;"
+                                data-level="{{ $i }}">
+                                <div id="btnAdd{{ $i }}" style="background: linear-gradient(90deg, #018328, #05c63f); z-index: 2; position: absolute;"
+                                    onmouseover="this.style.background='linear-gradient(90deg, #018328, #1eef5d )'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
+                                    onmouseout="this.style.background='linear-gradient(90deg, #018328, #05c63f)'; this.style.width='40px'; this.style.transition='all 0.2s ease'"
+                                    data-bs-toggle="popover"
+                                    data-bs-html="true"
+                                    data-bs-placement="top"
+                                    data-bs-trigger="click"
+                                    data-bs-content='
+                                    <div class="d-flex align-items-center gap-2" style="min-width:200px;">
+                                        <input 
+                                            type="text" 
+                                            class="form-control form-control-sm input-nueva-cabecera" 
+                                            data-level="{{ $i }}"
+                                            placeholder="Nombre de cabecera"
+                                        >
+                                        <button class="btn btn-sm btn-success btnAgregarSubCabecera" data-level="{{ $i }}">
+                                            +
+                                        </button>
+                                    </div>
+                                    '
+                                    >
+                                        <i class="fs-5 ri ri-add-fill"></i>
+                                </div>
+                            </th>
+                        </tr>
                     @endfor
-
-                </tr>
-
-            @endforeach
-
-        </tbody>
-
-    </table>
-
-<div class="mt-3 mb-3">
-    <button type="button" class="btn btn-primary btn-sm" id="btnAgregarSubvariable" title="Agregar subvariable">
-        <i class="ri ri-add-line"></i> Agregar Subvariable
-    </button>
-</div>
-
-</form>
+        
+                </thead>
+        
+                <tbody>
+        
+                    @foreach($variable->subvariables as $subvariable)
+        
+                        <tr class="subvariable-row" data-subvariable-id="{{ $subvariable->id }}" data-estado="{{ $subvariable->estado ?? 'activo' }}">
+                            <td class="button-cell-left" data-subvariable-id="{{ $subvariable->id }}" title="Eliminar subvariable" style="padding-right: 0; padding-left: 0; display: flex; flex-direction: row-reverse;">
+                                <div class="btn-eliminar-subvariable" style="background: linear-gradient(90deg, #c63805, #830e01); align-items: right;"
+                                    onmouseover="this.style.background='linear-gradient(90deg, #e44810, #830e01)'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
+                                    onmouseout="this.style.background='linear-gradient(90deg, #c63805, #830e01)'; this.style.width='40px'; this.style.transition='all 0.2s ease'">
+                                    <i class="fs-5 ri ri-delete-bin-fill"></i>
+                                </div>
+                            </td>
+                            {{-- Columna Subvariable --}}
+                            <td class="fw-semibold data subvariable-nombre" contenteditable="true" title="Editar nombre">
+                                {{ $subvariable->descripcion }}
+                                <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" data-id="{{ $subvariable->id }}" {{ (isset($subvariable->estado) && $subvariable->estado !== 'activo') ? '' : 'checked' }}>
+                            </td>
+        
+                            {{-- Columnas cabeceras (solo lectura) --}}
+                            @for($i = 0; $i < $variable->total_leaf_columns; $i++)
+                                <td class="data celda-dato"></td>
+                            @endfor
+        
+                        </tr>
+        
+                    @endforeach
+        
+                </tbody>
+        
+            </table>
+        </div>
+        <div class="mt-3 mb-3">
+            <button type="button" class="btn btn-primary btn-sm" id="btnAgregarSubvariable" title="Agregar subvariable">
+                <i class="ri ri-add-line"></i> Agregar Subvariable
+            </button>
+        </div>
+        </div>
+    
+    </form>
 
 <script>    
     $(function() {
@@ -568,6 +577,7 @@ $rows = $buildRows($variable->cabeceras);
 
                 cloned.attr('data-cabecera-id', newId)
                 cloned.attr('data-cabecera-padre', 'new-' + i )
+                cloned.removeAttr('style');
                 cloned.find('.btn-eliminar-cabecera').attr('data-cabecera-id', newId)
                 
                 cloned.insertAfter(anchor);
@@ -625,6 +635,7 @@ $rows = $buildRows($variable->cabeceras);
                 nuevo.attr('data-cabecera-id', newId)
                     .find('.cabecera-nombre')
                     .text(nombre);
+                nuevo.removeAttr('style');
                 nuevo.find('.btn-eliminar-cabecera').attr('data-cabecera-id', newId);
 
                 nuevo.insertAfter(plantilla);
@@ -923,16 +934,31 @@ $rows = $buildRows($variable->cabeceras);
 </script>
 
 <style>
-    .tabla-editable td.data {
-        min-height: 2rem;
+
+    .tabla-editable thead th {
+        position: relative;
+    }
+    .tabla-editable tbody td.subvariable-nombre {
+        background-color: #f5f5f5;
+    }
+    .tabla-editable thead th.variable-header {
+        background-color: #086375 !important;
+    }
+    .tabla-editable thead th.cabecera-header {
+        border: 0px;
+        border-left: 1px solid #dee2e6;
     }
     .tabla-editable td.celda-dato {
         cursor: pointer;
         transition: background-color 0.15s ease-in-out;
+        background-color: white;
+    }
+    .tabla-editable td.celda-dato:hover {
+        background-color: #f0f0f0;
     }
 
     .tabla-editable td.celda-dato.celda-apagada {
-        background-color: linear-gradient(0deg, #15dd51, #15dd51) !important;
+        background-color: black;
         opacity: 0.2;
     }
 
@@ -941,10 +967,6 @@ $rows = $buildRows($variable->cabeceras);
         width: 16px;
     }
 
-    .editable-titulo {
-        cursor: text;
-        padding: 0 4px;
-    }
 
     /* row disabled style */
     .row-disabled {
@@ -952,18 +974,25 @@ $rows = $buildRows($variable->cabeceras);
     }
 
     #tablaVariable .cabecera-header{
-        padding: 15px 5px;
+        padding: 10px 5px;
+        font-size: x-small;
     }
     
     #tablaVariable .subcabecera-header-new{
-        padding: auto 5px;
-        background: linear-gradient(0deg, #15dd51, #15dd51);
+        padding: 10px 5px;
+        font-size: x-small;
+        background-color: #26C485 !important;    ;
+        border: none;
+        border-left: 1px solid #dee2e6;
     }
 
     #tablaVariable .btn-icon{
         width: 25px;
         color: #d72411;
         box-shadow: none;
+    }
+    .btn{
+        border-radius: 1rem;
     }
 </style>
 

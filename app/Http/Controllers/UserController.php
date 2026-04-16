@@ -8,10 +8,14 @@ use App\Models\Role;
 use App\Models\Establecimiento;
 use App\Models\Municipio;
 use App\Models\Red;
+use App\Models\Sistema;
+use App\Models\user_sistema;
 use App\Traits\HasRoles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use function PHPUnit\Framework\isEmpty;
 use function PHPUnit\Framework\returnArgument;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -20,7 +24,16 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('alcances')->get();
+        $users = Auth::user()->hasRole('super-admin')? User::all() : User::with('alcances')
+            ->whereHas('sistemas', function ($query) {
+                $query->where('sistema_id', Auth::user()->sistema_id);
+            })
+            ->get();
+        $unsignedUsers = Auth::user()->hasRole('super-admin')? [] : User::with('alcances')
+            ->whereDoesntHave('sistemas', function ($query) {
+                $query->where('sistema_id', Auth::user()->sistema_id);
+            })
+            ->get();
         $conteos = [
             'red'            => $users->where('alcances.tipo', 'red')->count(),
             'municipio'      => $users->where('alcances.tipo', 'municipio')->count(),
@@ -34,7 +47,8 @@ class UserController extends Controller
          $users->each(function ($user) use ($alcances) {
             $user->alcance = $alcances->where('usuario_id', $user->id)->first();
         });
-        return view('users.index', compact('users', 'roles', 'establecimientos', 'municipios', 'redes', 'conteos'));
+        $sistemas = Sistema::all();
+        return view('users.index', compact('users', 'unsignedUsers', 'roles', 'establecimientos', 'municipios', 'redes', 'conteos', 'sistemas'));
     }
 
     /**
@@ -51,18 +65,25 @@ class UserController extends Controller
     public function store(Request $request)
     {
         request()->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:255|unique:users,name',
             'password' => 'required|string',
             'role' => 'required|exists:roles,id',
+            'sistemas' => 'nullable|array',
+            'sistemas.*' => 'exists:sistemas,id',
         ]); 
-
         $user = new User();
         $user->name = $request->name;
-        $user->email = $request->email;
         $user->password = Hash::make($request->password);
         $user->save();
-
+        if(Auth::user()->hasRole('super-admin')){
+            $user->sistemas()->attach($request->sistemas);
+            $user->sistema_id = $request->sistemas[0];
+            $user->save();
+        } else {
+            $user->sistemas()->attach(Auth::user()->sistema_id);
+            $user->sistema_id = Auth::user()->sistema_id;
+            $user->save();
+        }
         $user->assignRole(ROle::findOrFail($request->role));
         $user->load('roles');
         if ($user->hasRole('reportes')) {
@@ -94,6 +115,14 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
     }
 
+    public function assignSystem(User $user)
+    {
+        $user->sistemas()->attach(Auth::user()->sistema_id);
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'Sistema asignado exitosamente.');
+    }
+
     /**
      * Display the specified resource.
      */
@@ -119,17 +148,21 @@ class UserController extends Controller
 
         request()->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8',
             'role' => 'required|exists:roles,id',
+            'sistemas' => 'nullable|array',
+            'sistemas.*' => 'exists:sistemas,id',
         ]);
 
         $user->name = $request->name;
-        $user->email = $request->email;
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         $user->save();
+
+        if (Auth::user()->hasRole('super-admin')) {
+            $user->sistemas()->sync($request->sistemas);
+        }
 
         $user->syncRoles($request->role);
 
@@ -155,6 +188,14 @@ class UserController extends Controller
         }
 
         return redirect()->route('users.index')->with('success', 'Usuario actualizado exitosamente.');
+    }
+
+    public function toggle(User $user)
+    {
+        $user->estado = !$user->estado;
+        $user->save();
+
+        return redirect()->route('users.index')->with('success', 'Estado del usuario actualizado exitosamente.');
     }
 
     /**

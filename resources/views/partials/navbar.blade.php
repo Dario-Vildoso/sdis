@@ -10,15 +10,23 @@
             <i class="ri ri-menu-2-line"></i>
         </a>
     </div>
-
+    
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-
+        
         <div class="navbar-nav align-items-center">
             <div class="nav-item d-flex align-items-center">
+                <a href="{{ route('reportes.oportunidad') }}" class="menu-link">
+                    <i class="menu-icon ri {{ request()->routeIs('reportes.oportunidad') ? 'ri-file-chart-fill' : 'ri-file-chart-line' }} bg-warning"></i>
+                    <div>Oportunidad de la información</div>
+                </a>
             </div>
         </div>
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">
+            <div class="border-end">
+                <span class="badge bg-warning me-1 small" style="border-radius: 1rem; box-shadow: 0px 0px 5px rgba(232, 198, 4, 0.5);">{{ Auth::user()->sistema->nombre }}</span>&nbsp;&nbsp;
+            </div>
+            &nbsp;&nbsp;
             {{Auth::user()->name}}
             @if (Auth::user()->alcances()->count() > 0)
             -

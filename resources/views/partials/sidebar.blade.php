@@ -10,13 +10,14 @@
         </div>
     
     <ul class="menu-inner">
-
+        @if ((Auth::user()->roles->first()->slug == 'admin') || (Auth::user()->roles->first()->slug == 'super-admin'))
+        
         <li class="menu-item {{ request()->routeIs(['users.*', 'roles.*']) ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri {{ request()->routeIs(['users.*', 'roles.*']) ? 'ri-group-fill' : 'ri-group-line' }} bg-warning"></i>
                 <div>Gestión de usuarios</div>
             </a>
-
+            
             <ul class="menu-sub">
                 <li class="menu-item {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <a href="{{ route('users.index') }}" class="menu-link">
@@ -70,11 +71,11 @@
                 </li>
             </ul>
         </li>
-        <li class="menu-item {{ request()->routeIs(['formularios.*', 'establecimientos.*']) ? 'open' : '' }}">
-        <a href="javascript:void(0);" class="menu-link menu-toggle">
-            <i class="menu-icon tf-icons ri {{ request()->routeIs(['formularios.*', 'establecimientos.*']) ? 'ri-database-2-fill' : 'ri-database-2-line' }} bg-warning"></i>
-            <div>Formularios y Datos</div>
-        </a>
+        <li class="menu-item {{ request()->routeIs(['formularios.*', 'establecimientos.*', 'reportes.*', 'exportaciones.*']) ? 'open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons ri {{ request()->routeIs(['formularios.*', 'establecimientos.*']) ? 'ri-database-2-fill' : 'ri-database-2-line' }} bg-warning"></i>
+                <div>Formularios y Datos</div>
+            </a>
             <ul class="menu-sub">
                 <li class="menu-item {{ request()->routeIs('establecimientos.*') ? 'active' : '' }}">
                     <a href="{{ route('establecimientos.index') }}" class="menu-link">
@@ -102,28 +103,28 @@
                 </li>
             </ul>
         </li>
-------------------------------------------
-        <li class="menu-item {{ request()->routeIs('') ? 'open' : '' }}">
+        @else
+        <li class="menu-item {{ request()->routeIs('formularios.*', 'reportes.*') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons ri {{ request()->routeIs('formularios.*') ? 'ri-survey-fill' : 'ri-survey-line' }} bg-warning"></i>
+                <i class="menu-icon tf-icons ri {{ request()->routeIs('formularios.*', 'reportes.*') ? 'ri-survey-fill' : 'ri-survey-line' }} bg-warning"></i>
                 <div>Formularios Activos</div>  
             </a>
-
+            
             <ul class="menu-sub">
-                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
+                <li class="menu-item {{ request()->routeIs('formularios.menu') ? 'active' : '' }}">
                     <a href="{{ route('formularios.menu') }}" class="menu-link">
-                        <i class="menu-icon ri {{ request()->routeIs('users.*') ? 'ri-file-edit-fill' : 'ri-file-edit-line' }} bg-warning"></i>
+                        <i class="menu-icon ri {{ request()->routeIs('formularios.menu') ? 'ri-file-edit-fill' : 'ri-file-edit-line' }} bg-warning"></i>
                         <div>Formularios Actuales</div>
                     </a>
                 </li>
                 <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
-                    <a href="{{ route('roles.index') }}" class="menu-link">
+                    <a href="{{ route('roles.index') }}" class="menu-link disabled">
                         <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-alert-fill' : 'ri-alert-line' }} bg-warning"></i>
                         <div>Pendientes</div>
                     </a>
                 </li>
-                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
-                    <a href="{{ route('roles.index') }}" class="menu-link">
+                <li class="menu-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                    <a href="{{ route('reportes.index') }}" class="menu-link">
                         <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-history-fill' : 'ri-history-line' }} bg-warning"></i>
                         <div>Historial</div>
                     </a>
@@ -150,5 +151,6 @@
                 </li>
             </ul>
         </li>
+        @endif
     </ul>
 </aside>
