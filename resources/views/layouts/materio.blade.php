@@ -282,6 +282,47 @@
             transition: all 0.3s ease;
         }
 
+        form.reports select,
+        form.reports input {
+            border: none;
+            border-radius: 50rem;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.15);
+        }
+
+        form.reports select[multiple][size]:not([size="1"]) {
+            border-radius: 25px 0px 0px 25px;
+        }
+
+        form.reports .input-group-text {
+            border: none;
+            color: white;
+            border-radius: 5rem;
+        }
+
+        form.reports select:hover,
+        form.reports input:hover {
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.25);
+        }
+
+        form.reports select:focus,
+        form.reports input:focus {
+            outline: none;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.25);
+        }
+
+        form.reports .btn {
+            border: none;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        form.reports .btn:hover {
+            background-color: #17a2b8;
+            color: white;
+            box-shadow: 0 0 15px #17a2b8;
+        }
+
         [contenteditable="true"] {
             cursor: text;
             outline: 2px dashed transparent;

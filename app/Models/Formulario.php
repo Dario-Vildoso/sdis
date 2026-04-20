@@ -30,4 +30,8 @@ class Formulario extends Model
     {
         return $this->belongsToMany(Variable::class, 'asignacions', 'formulario_id', 'variable_id');
     }
+    public function establecimientos()
+    {
+        return $this->belongsToMany(Establecimiento::class, 'establecimiento_formularios', 'formulario_id', 'establecimiento_id');
+    }
 }

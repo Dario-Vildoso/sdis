@@ -14,7 +14,7 @@ class EstablecimientoController extends Controller
      */
     public function index()
     {
-        $establecimientos = Establecimiento::all();
+        $establecimientos = Establecimiento::query()->orderBy('descripcion', 'asc')->get();
         $municipios = Municipio::all();
         return view('establecimientos.index', compact('establecimientos' , 'municipios'));
     }

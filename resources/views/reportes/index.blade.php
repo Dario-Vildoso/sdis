@@ -41,7 +41,7 @@
     <div class="card-body">
         <h4 class="card-title mb-3">Filtros de reporte</h4>
 
-        <form method="GET" action="{{ route('reportes.index') }}">
+        <form class="reports" method="GET" action="{{ route('reportes.index') }}">
 
             <div class="row">
 
@@ -49,38 +49,55 @@
                     <div class="row g-3">
 
                         <div class="col-12">
-                            <label class="form-label">Formulario</label>
-                            <select name="formulario_id" class="form-select" onchange="this.form.submit()">
-                                <option value="">Seleccione...</option>
-                                @foreach($formularios as $item)
-                                    <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
-                                        {{ $item->sistema->nombre ?? 'Sin sistema' }} - {{ $item->gestion->nombre ?? 'Sin gestión' }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Formularios</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-warning">
+                                    <i class="ri ri-file-list-3-line"></i>
+                                </span>
+                                <select id="formularioSelect" name="formulario_ids[]" class="form-select" multiple size="1">
+                                    @foreach($formularios as $item)
+                                        <option value="{{ $item->id }}" {{ $formularioIdsSeleccionados->contains($item->id) ? 'selected' : '' }}>
+                                            {{ $item->sistema->nombre ?? 'Sin sistema' }} - {{ $item->gestion->nombre ?? 'Sin gestión' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <small class="text-muted">Selecciona uno o más formularios (Ctrl + clic).</small>
                         </div>
-
-                        <div class="col-6">
-                            <label class="form-label">Periodo desde</label>
-                            <select name="periodo_desde_id" class="form-select">
-                                @foreach($periodos as $periodo)
-                                    <option value="{{ $periodo->id }}" {{ (int) $periodoDesde === $periodo->id ? 'selected' : '' }}>
-                                        {{ $periodo->descripcion }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-6">
-                            <label class="form-label">Periodo hasta</label>
-                            <select name="periodo_hasta_id" class="form-select">
-                                @foreach($periodos as $periodo)
-                                    <option value="{{ $periodo->id }}" {{ (int) $periodoHasta === $periodo->id ? 'selected' : '' }}>
-                                        {{ $periodo->descripcion }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @foreach($formulariosSeleccionados as $formSeleccionado)
+                            @php
+                                $periodosFormulario = $periodosPorFormulario->get($formSeleccionado->id, collect());
+                            @endphp
+                            <div class="col-12">
+                                <div class="border rounded p-2">
+                                    <div class="fw-semibold mb-2">
+                                        {{ $formSeleccionado->sistema->nombre ?? 'Sin sistema' }} - {{ $formSeleccionado->gestion->nombre ?? 'Sin gestión' }}
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label mb-1">Desde</label>
+                                            <select name="periodo_desde_ids[{{ $formSeleccionado->id }}]" class="form-select">
+                                                @foreach($periodosFormulario as $periodo)
+                                                    <option value="{{ $periodo->id }}" {{ (int) ($periodoDesdePorFormulario[$formSeleccionado->id] ?? 0) === $periodo->id ? 'selected' : '' }}>
+                                                        {{ $periodo->descripcion }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label mb-1">Hasta</label>
+                                            <select name="periodo_hasta_ids[{{ $formSeleccionado->id }}]" class="form-select">
+                                                @foreach($periodosFormulario as $periodo)
+                                                    <option value="{{ $periodo->id }}" {{ (int) ($periodoHastaPorFormulario[$formSeleccionado->id] ?? 0) === $periodo->id ? 'selected' : '' }}>
+                                                        {{ $periodo->descripcion }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
 
                     </div>
                 </div>
@@ -118,18 +135,23 @@
                             
                             
                             <label class="form-label">Establecimientos</label>
-                            <div class="col-md-6">
-                                <input
-                                    type="text"
-                                    class="form-control mb-2"
-                                    id="establecimientoSearch"
-                                    placeholder="Buscar..."
-                                >
+                            <div class="col-md-6 mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black">
+                                        <i class="ri ri-search-line"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="establecimientoSearch"
+                                        placeholder="Buscar..."
+                                    >
+                                </div>
                             </div>
                             <select name="establecimiento_ids[]" id="establecimientoSelect" class="form-select" multiple size="6">
                                 @foreach($establecimientosDisponibles as $establecimiento)
                                     <option value="{{ $establecimiento->id }}" {{ $establecimientosSeleccionados->contains($establecimiento->id) || $establecimientosDisponibles->count() == 1 ? 'selected' : '' }}>
-                                        {{ $establecimiento->descripcion }}
+                                        {{ $establecimiento->descripcion }} - {{ $establecimiento->nivel }}º Nivel
                                     </option>
                                 @endforeach
                             </select>
@@ -153,7 +175,7 @@
 
             {{-- 🔹 BOTONES --}}
             <div class="d-flex gap-2 mt-4">
-                <button class="btn btn-primary" type="submit">
+                <button class="btn text-white" type="submit" style="background-color: #139b92;">
                     <i class="ri ri-filter-3-line"></i> Aplicar filtros
                 </button>
                 <a href="{{ route('reportes.index') }}" class="btn btn-outline-secondary">Limpiar</a>
@@ -163,8 +185,10 @@
     </div>
 </div>
 
-@if(!$formulario)
-    <div class="alert alert-info">Selecciona un formulario para generar el reporte.</div>
+@if($formulariosSeleccionados->isEmpty())
+    <div class="alert alert-info">Selecciona uno o más formularios para generar el reporte.</div>
+@elseif(!$hayVariablesComunes)
+    <div class="alert alert-warning">Los formularios seleccionados no comparten variables en común.</div>
 @elseif(empty($rows))
     <div class="alert alert-warning">No hay datos para los filtros seleccionados.</div>
 @else
@@ -203,15 +227,26 @@
                                 >
                             </div>
                         </div>
-
-                        @php
-                            $exportParams = array_merge(['variable' => $row['variable']->id], request()->query());
-                        @endphp
-                        <div class="d-flex justify-content-end mb-3">
-                            <a href="{{ route('reportes.export', $exportParams) }}" class="btn btn-success btn-sm">
-                                <i class="ri ri-file-excel-2-line"></i> Exportar Excel
-                            </a>
-                        </div>
+                        @if($formulariosSeleccionados->count() === 1)
+                            @php
+                                $formIdExport = (int) $formulariosSeleccionados->first()->id;
+                                $exportParams = [
+                                    'variable' => $row['variable']->id,
+                                    'formulario_id' => $formIdExport,
+                                    'periodo_desde_id' => $periodoDesdePorFormulario[$formIdExport] ?? null,
+                                    'periodo_hasta_id' => $periodoHastaPorFormulario[$formIdExport] ?? null,
+                                    'red_ids' => $redesSeleccionadas->all(),
+                                    'municipio_ids' => $municipiosSeleccionados->all(),
+                                    'establecimiento_ids' => $establecimientosSeleccionados->all(),
+                                    'mostrar_consolidado' => $mostrarConsolidado ? 1 : 0,
+                                ];
+                            @endphp
+                            <div class="d-flex justify-content-end mb-3">
+                                <a href="{{ route('reportes.export', $exportParams) }}" class="btn btn-success btn-sm">
+                                    <i class="ri ri-file-excel-2-line"></i> Exportar Excel
+                                </a>
+                            </div>
+                        @endif
 
                         <div class="table-responsive">
                             <table class="table align-middle">
@@ -364,6 +399,9 @@
                 const match = term === '' || label.includes(term);
                 $(this).toggle(match);
             });
+        });
+        $('#formularioSelect').on('change', function () {
+            this.form.submit();
         });
     });
 </script>

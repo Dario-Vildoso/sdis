@@ -62,7 +62,7 @@
                             <button type="button" 
                                     class="btn-icon">
                                 <a href="{{ route('formularios.show', $formulario) }}">
-                                    <i class="ri ri-eye-line bg-info"></i>
+                                    <i class="ri ri-task-line bg-info"></i>
                                 </a>
                             </button>
                             <form action="{{ route('formularios.destroy', $formulario) }}" method="POST" style="display: inline;">

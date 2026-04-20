@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\ReporteVariableExport;
 use App\Models\Dato;
 use App\Models\Establecimiento;
+use App\Models\Establecimiento_Formulario;
 use App\Models\Formulario;
 use App\Models\Municipio;
 use App\Models\Periodo;
@@ -24,7 +25,7 @@ class ReporteController extends Controller
         $scopeData = $this->resolveScope($scope?->tipo, (int) ($scope?->alcance_id));
         $establecimientosScope = $scopeData['establecimientos'];
 
-        $formularios = Formulario::query()->orderBy('id')->get();
+        $formularios = Formulario::query()->where('sistema_id', $user->sistema_id)->orderBy('id')->get();
 
         $redesDisponibles = $establecimientosScope
             ->groupBy('red_id')
@@ -56,17 +57,35 @@ class ReporteController extends Controller
         if ($scope?->tipo === 'red' && $redesSeleccionadas->isEmpty()) {
             $redesSeleccionadas = collect([(int) $scope->alcance_id]);
         }
+        
+        $formularioIds = $request->formulario_ids
+            ? collect($request->formulario_ids)->map(fn ($id) => (int) $id)->filter()->values()
+            : collect();
+
+        $establecimientosAsignados = collect();
+        if ($formularioIds->isNotEmpty()) {
+            $establecimientosAsignados = Establecimiento_Formulario::query()
+                ->whereIn('formulario_id', $formularioIds)
+                ->pluck('establecimiento_id')
+                ->map(fn ($id) => (int) $id)
+                ->flip();
+        }
 
         $establecimientosDisponibles = $establecimientosScope
             ->when($redesSeleccionadas->isNotEmpty(), fn ($col) => $col->whereIn('red_id', $redesSeleccionadas))
             ->when($municipiosSeleccionados->isNotEmpty(), fn ($col) => $col->whereIn('id_mun', $municipiosSeleccionados))
+            ->when($establecimientosAsignados->isNotEmpty(), fn ($col) => $col->whereIn('id', $establecimientosAsignados->keys()))
             ->values();
 
-        $formularioId = (int) $request->integer('formulario_id');
+        $formulariosSeleccionados = collect();
+        $periodosPorFormulario = collect();
+        $periodoDesdePorFormulario = [];
+        $periodoHastaPorFormulario = [];
+        $variablesComunes = collect();
         $formulario = null;
 
-        if ($formularioId > 0) {
-            $formulario = Formulario::with([
+        if ($formularioIds->isNotEmpty()) {
+            $formulariosSeleccionados = Formulario::with([
                 'variables' => function ($query) {
                     $query->with([
                         'subvariables' => function ($subQuery) {
@@ -75,22 +94,37 @@ class ReporteController extends Controller
                         'cabeceras',
                     ]);
                 },
-            ])->find($formularioId);
-        }
+            ])->whereIn('id', $formularioIds)->where('sistema_id', $user->sistema_id)->get()->sortBy(fn($item) => $formularioIds->search($item->id))->values();
+            $formulario = $formulariosSeleccionados->count() === 1 ? $formulariosSeleccionados->first() : null;
 
-        $periodos = collect();
-        $periodoDesde = null;
-        $periodoHasta = null;
-
-        if ($formulario) {
-            $periodos = Periodo::query()
-                ->where('formulario_id', $formulario->id)
-                ->orderBy('fecha_inicio')
+            $periodosPorFormulario = Periodo::query()->whereIn('formulario_id', $formulariosSeleccionados->pluck('id'))->orderBy('fecha_inicio')->get()->groupBy('formulario_id');
+            foreach ($formulariosSeleccionados as $formularioSeleccionado) {
+                $periodosFormulario = $periodosPorFormulario->get($formularioSeleccionado->id, collect());
+                $periodoDesdePorFormulario[$formularioSeleccionado->id] = (int) ($request->input('periodo_desde_ids.' . $formularioSeleccionado->id)
+                    ?: optional($periodosFormulario->first())->id);
+                $periodoHastaPorFormulario[$formularioSeleccionado->id] = (int) ($request->input('periodo_hasta_ids.' . $formularioSeleccionado->id)
+                    ?: optional($periodosFormulario->last())->id);
+            }
+            $commonVariableIds = $formulariosSeleccionados
+                ->pluck('variables')
+                ->map(fn ($variables) => $variables->pluck('id')->values())
+                ->reduce(function ($carry, $ids) {
+                    if ($carry === null) {
+                        return $ids;
+                    }
+                    return $carry->intersect($ids)->values();
+                });
+                
+            $variablesComunes = Variable::query()
+                ->with([
+                    'subvariables' => fn ($query) => $query->where('estado', 'activo'),
+                    'cabeceras',
+                ])
+                ->whereIn('id', $commonVariableIds ?? collect())
+                ->orderBy('descripcion')
                 ->get();
-
-            $periodoDesde = $request->integer('periodo_desde_id') ?: optional($periodos->first())->id;
-            $periodoHasta = $request->integer('periodo_hasta_id') ?: optional($periodos->last())->id;
         }
+
 
         $establecimientosSeleccionados = collect($request->input('establecimiento_ids', []))
             ->map(fn ($id) => (int) $id)
@@ -105,10 +139,28 @@ class ReporteController extends Controller
         $sinEstablecimientosSeleccionados = $establecimientosSeleccionados->isEmpty();
 
         $rows = [];
-        if ($formulario && $periodoDesde && $periodoHasta) {
-            $periodosEnRango = $periodos
-                ->filter(fn ($periodo) => $periodo->id >= $periodoDesde && $periodo->id <= $periodoHasta)
-                ->pluck('id');
+        if ($formulariosSeleccionados->isNotEmpty() && $variablesComunes->isNotEmpty()) {
+            $periodosEnRango = $formulariosSeleccionados
+                ->flatMap(function ($formularioSeleccionado) use ($periodosPorFormulario, $periodoDesdePorFormulario, $periodoHastaPorFormulario) {
+                    $formularioId = $formularioSeleccionado->id;
+                    $periodosFormulario = $periodosPorFormulario->get($formularioId, collect());
+                    $periodoDesde = (int) ($periodoDesdePorFormulario[$formularioId] ?? 0);
+                    $periodoHasta = (int) ($periodoHastaPorFormulario[$formularioId] ?? 0);
+
+                    if (! $periodoDesde || ! $periodoHasta) {
+                        return collect();
+                    }
+
+                    if ($periodoDesde > $periodoHasta) {
+                        [$periodoDesde, $periodoHasta] = [$periodoHasta, $periodoDesde];
+                    }
+
+                    return $periodosFormulario
+                        ->filter(fn ($periodo) => $periodo->id >= $periodoDesde && $periodo->id <= $periodoHasta)
+                        ->pluck('id');
+                })
+                ->unique()
+                ->values();
 
             if ($periodosEnRango->isNotEmpty()) {
                 $establecimientosParaConsulta = $sinEstablecimientosSeleccionados
@@ -118,12 +170,12 @@ class ReporteController extends Controller
                 $datos = Dato::query()
                     ->whereIn('periodo_id', $periodosEnRango)
                     ->whereIn('establecimiento_id', $establecimientosParaConsulta)
-                    ->whereIn('subvariable_id', $formulario->variables->flatMap->subvariables->pluck('id'))
-                    ->whereIn('cabecera_id', $formulario->variables->flatMap->cabeceras->pluck('id'))
+                    ->whereIn('subvariable_id', $variablesComunes->flatMap->subvariables->pluck('id'))
+                    ->whereIn('cabecera_id', $variablesComunes->flatMap->cabeceras->pluck('id'))
                     ->get();
 
-                $rows = $this->buildRows(
-                    $formulario,
+                $rows = $this->buildRowsFromVariables(
+                    $variablesComunes,
                     $datos,
                     $establecimientosDisponibles,
                     $establecimientosSeleccionados,
@@ -136,9 +188,12 @@ class ReporteController extends Controller
         return view('reportes.index', [
             'formularios' => $formularios,
             'formulario' => $formulario,
-            'periodos' => $periodos,
-            'periodoDesde' => $periodoDesde,
-            'periodoHasta' => $periodoHasta,
+            'formulariosSeleccionados' => $formulariosSeleccionados,
+            'formularioIdsSeleccionados' => $formulariosSeleccionados->pluck('id'),
+            'periodosPorFormulario' => $periodosPorFormulario,
+            'periodoDesdePorFormulario' => $periodoDesdePorFormulario,
+            'periodoHastaPorFormulario' => $periodoHastaPorFormulario,
+            'hayVariablesComunes' => $variablesComunes->isNotEmpty(),
             'redesDisponibles' => $redesDisponibles,
             'municipiosDisponibles' => $municipiosDisponibles,
             'redesSeleccionadas' => $redesSeleccionadas,
@@ -322,7 +377,25 @@ class ReporteController extends Controller
         bool $sinEstablecimientosSeleccionados
     ): array
     {
-        return $formulario->variables->map(function ($variable) use ($datos, $establecimientosDisponibles, $establecimientosSeleccionados, $mostrarConsolidado, $sinEstablecimientosSeleccionados) {
+        return $this->buildRowsFromVariables(
+            $formulario->variables,
+            $datos,
+            $establecimientosDisponibles,
+            $establecimientosSeleccionados,
+            $mostrarConsolidado,
+            $sinEstablecimientosSeleccionados
+        );
+    }
+    private function buildRowsFromVariables(
+        Collection $variables,
+        Collection $datos,
+        Collection $establecimientosDisponibles,
+        Collection $establecimientosSeleccionados,
+        bool $mostrarConsolidado,
+        bool $sinEstablecimientosSeleccionados
+    ): array
+    {
+        return $variables->map(function ($variable) use ($datos, $establecimientosDisponibles, $establecimientosSeleccionados, $mostrarConsolidado, $sinEstablecimientosSeleccionados) {
             return $this->buildVariableRow($variable, $datos, $establecimientosDisponibles, $establecimientosSeleccionados, $mostrarConsolidado, $sinEstablecimientosSeleccionados);
         })->toArray();
     }
