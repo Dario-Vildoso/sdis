@@ -15,6 +15,8 @@
         });
     </script>
 @endif
+<div class="row justify-content-end">
+
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -27,6 +29,7 @@
             </div>
         </div>
     </div>
+</div>
 
 <div class="card" style="padding: 20px;">
     <div class="table-responsive">
@@ -38,8 +41,7 @@
                 <th>Municipio</th>
                 <th>Codigo</th>
                 <th>Nivel</th>
-                <th>Estado</th>
-                <th>Gestion</th>
+                <th>Estado</th>ç
                 <th class="actions">Acciones</th>
             </tr>
             </thead>
@@ -60,7 +62,6 @@
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $establecimiento->id }}" data-id="{{ $establecimiento->id }}" {{ $establecimiento->estado ? 'checked' : '' }}>
                         </div>
                     </td>
-                    <td>{{ $establecimiento->gestion }}</td>
                     <td>
                         <button type="button"
                                 class="btn-icon edit-est"
@@ -68,7 +69,6 @@
                                 data-descripcion="{{ $establecimiento->descripcion }}"
                                 data-municipio="{{ $establecimiento->id_mun }}"
                                 data-codigo="{{ $establecimiento->codigo_est }}"
-                                data-gestion="{{ $establecimiento->gestion }}"
                                 data-nivel="{{ $establecimiento->nivel }}">
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
@@ -147,7 +147,7 @@ $(function () {
     var table = $("#estsTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        "order": [1, 'asc'],
+        "order": [],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -274,18 +274,6 @@ $(function () {
                             </div>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="estGestion" class="form-label">Gestión</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-info"><i class="ri ri-calendar-line"></i></span>
-                                <input type="text"
-                                    class="form-control"
-                                    id="estGestion"
-                                    name="gestion"
-                                    required>
-                            </div>
-                        </div>
-
                     </div>
 
                 </div>
@@ -312,7 +300,6 @@ $(function () {
                         $('#estDescripcion').val('');
                         $('#estMunicipio').val('');
                         $('#estCodigo').val('');
-                        $('#estGestion').val('');
                         $('#estSubmit').text('Crear');
                 });
 
@@ -322,7 +309,6 @@ $(function () {
                         var descripcion = $(this).data('descripcion');
                         var municipio = $(this).data('municipio');
                         var codigo = $(this).data('codigo');
-                        var gestion = $(this).data('gestion');
                         var nivel = $(this).data('nivel');
 
                         $('#estModalLabel').text('Editar establecimiento');
@@ -331,7 +317,6 @@ $(function () {
                         $('#estDescripcion').val(descripcion);
                         $('#estMunicipio').val(municipio);
                         $('#estCodigo').val(codigo);
-                        $('#estGestion').val(gestion);
                         $('#estNivel').val(nivel);
                         $('#estSubmit').text('Actualizar');
 

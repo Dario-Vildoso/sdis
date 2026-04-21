@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Sistema;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -61,6 +62,17 @@ class RolePermissionSeeder extends Seeder
             Permission::firstOrCreate(['slug' => $permission['slug']], $permission);
         }
 
+        // Crear Sistemas
+        $SDIS = Sistema::firstOrCreate(
+            ['nombre' => 'SDIs'],
+        );
+        $Vigilancia = Sistema::firstOrCreate(
+            ['nombre' => 'Vigilancia'],
+        );
+        $Hospitales = Sistema::firstOrCreate(
+            ['nombre' => 'Hospitales'],
+        );
+
         // Crear roles
         $superAdmin = Role::firstOrCreate(
             ['slug' => 'super-admin'],
@@ -72,24 +84,10 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Administrador', 'description' => 'Gestion copleta de usuarios y formularios']
         );
 
-        $reports = Role::firstOrCreate(
-            ['slug' => 'reportes'],
-            ['name' => 'Reportes', 'description' => 'Envio de datos y/o gestion de reportes']
-        );
-
         // Asignar permisos a roles
         $allPermissions = Permission::all()->pluck('id')->toArray();
         $superAdmin->permissions()->sync($allPermissions);
         $admin->permissions()->sync($allPermissions);
-
-        $reportsPermissions = Permission::whereIn('slug', [
-            'users.view',
-            'formularios.view', 'formularios.create', 'formularios.edit',
-            'gestiones.view', 'gestiones.create', 'gestiones.edit',
-            'variables.view', 'variables.create', 'variables.edit',
-            'datos.view', 'datos.create', 'datos.edit',
-        ])->pluck('id')->toArray();
-        $reports->permissions()->sync($reportsPermissions);
 
         // Crear usuario super-admin
         $superAdminUser = User::firstOrCreate(
@@ -99,61 +97,37 @@ class RolePermissionSeeder extends Seeder
             ]
         );
         $superAdminUser->assignRole('super-admin');
+        $superAdminUser->sistemas()->sync([$SDIS->id, $Vigilancia->id, $Hospitales->id]);
 
         // Crear usuario administrador
-        $adminUser = User::firstOrCreate(
-            ['name' => 'Administrador'],
+        $adminSDIS = User::firstOrCreate(
+            ['name' => 'Administrador SDIS'],
             [
                 'password' => bcrypt('admin1234'),
             ]
         );
         // Asignar rol
-        $adminUser->assignRole('admin');
-
-
-        // Crear usuario de reportes
-        $establecimietoUser = User::firstOrCreate(
-            ['name' => 'Establecimiento'],
+        $adminSDIS->assignRole('admin');
+        $adminSDIS->sistemas()->sync([$SDIS->id]);
+        
+        $adminHospitales = User::firstOrCreate(
+            ['name' => 'Administrador Hospitales'],
             [
-                'password' => bcrypt('establecimiento1234'),
+                'password' => bcrypt('admin1234'),
             ]
         );
+        // Asignar rol
+        $adminHospitales->assignRole('admin');
+        $adminHospitales->sistemas()->sync([$Hospitales->id]);
 
-        $establecimietoUser->assignRole('reportes');
-
-        // Crear usuario de reportes
-        $municipioUser = User::firstOrCreate(
-            ['name' => 'Municipio'],
+        $adminVigilancia = User::firstOrCreate(
+            ['name' => 'Administrador Vigilancia'],
             [
-                'password' => bcrypt('municipio1234'),
+                'password' => bcrypt('admin1234'),
             ]
         );
-
-        $municipioUser->assignRole('reportes');
-
-        // Crear usuario de reportes
-        $redUser = User::firstOrCreate(
-            ['name' => 'Red'],
-            [
-                'password' => bcrypt('redes1234'),
-            ]
-        );
-
-        $redUser->assignRole('reportes');
-
-        $establecimietoUser->alcances()->create([
-            'tipo' => 'establecimiento',
-            'alcance_id' => 1
-        ]);
-
-        $municipioUser->alcances()->create([
-            'tipo' => 'municipio',
-            'alcance_id' => 1
-        ]);
-
-        $redUser->alcances()->create([
-            'tipo' => 'red',
-            'alcance_id' => 1
-        ]);
+        // Asignar rol
+        $adminVigilancia->assignRole('admin');
+        $adminVigilancia->sistemas()->sync([$Vigilancia->id]);
     }
 }

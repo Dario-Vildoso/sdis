@@ -57,6 +57,8 @@ Route::middleware(['auth', 'role:admin|super-admin'])->group(function () {
     Route::post('variables/{variable}/tabla', [VariableController::class, 'guardarTabla'])->name('variables.guardarTabla');
     Route::post('/formularios/add-variable', [FormularioController::class, 'addVariable'])->name('formularios.addVariable');
     Route::post('/formularios/remove-variable', [FormularioController::class, 'removeVariable'])->name('formularios.removeVariable');
+    Route::get('/formularios/{formulario}/establecimientos', [FormularioController::class, 'establecimientosAsignados'])->name('formularios.establecimientosAsignados');
+    Route::post('/formularios/{formulario}/establecimientos', [FormularioController::class, 'asignarEstablecimientos'])->name('formularios.asignarEstablecimientos');
     Route::post('/asignaciones/create-variable-form/{form}', [AsignacionController::class, 'createVariableForm'])->name('asignaciones.createVarForm');
     Route::get('oportunidad-informacion', [ReporteController::class, 'oportunidad'])->name('reportes.oportunidad');
     });

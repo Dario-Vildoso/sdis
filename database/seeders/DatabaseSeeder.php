@@ -211,24 +211,28 @@ class DatabaseSeeder extends Seeder
         Establecimiento::create([
             'descripcion' => 'Centro de Salud Sucre Central',
             'id_mun' => 1,
+            'estado' => true,
             'codigo_est' => 'CSC001',
             'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Puesto de Salud Tablas',
             'id_mun' => 2,
+            'estado' => true,
             'codigo_est' => 'PST001',
             'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Centro de Salud San Lucas',
             'id_mun' => 28,
+            'estado' => true,
             'codigo_est' => 'CSL001',
             'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Centro de Salud Padilla',
             'id_mun' => 8,
+            'estado' => true,
             'codigo_est' => 'CSP001',
             'gestion' => 2026,
         ]);

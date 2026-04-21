@@ -3,7 +3,7 @@
     <div class="text-center py-4" style="background: linear-gradient(90deg, #086375, #1dd3b0) !important;">
         <img src="{{ asset('assets/img/sedes.png') }}" alt="Logo" style="max-width: 100px; width: 100%;">
         
-            <span class="fw-bold" style="color: white; font-size: 26px;">SDIS</span>
+            <span class="fw-bold" style="color: white; font-size: 26px;">{{ Auth::user()->sistema->nombre }}</span>
     </div>
         <div class="menu-header">
             <span class="menu-header-text" style="font-size: 18px; color: #ffc107;">Menú Principal</span>
@@ -104,34 +104,41 @@
             </ul>
         </li>
         @else
+        
         <li class="menu-item {{ request()->routeIs('formularios.*', 'reportes.*') ? 'open' : '' }}">
+            @if (Auth::user()->alcances->tipo == 'establecimiento')
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri {{ request()->routeIs('formularios.*', 'reportes.*') ? 'ri-survey-fill' : 'ri-survey-line' }} bg-warning"></i>
                 <div>Formularios Activos</div>  
             </a>
+            @endif
             
             <ul class="menu-sub">
+                @if (Auth::user()->alcances->tipo == 'establecimiento')
+                
                 <li class="menu-item {{ request()->routeIs('formularios.menu') ? 'active' : '' }}">
                     <a href="{{ route('formularios.menu') }}" class="menu-link">
                         <i class="menu-icon ri {{ request()->routeIs('formularios.menu') ? 'ri-file-edit-fill' : 'ri-file-edit-line' }} bg-warning"></i>
                         <div>Formularios Actuales</div>
                     </a>
                 </li>
+                @endif
                 <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
                     <a href="{{ route('roles.index') }}" class="menu-link disabled">
                         <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-alert-fill' : 'ri-alert-line' }} bg-warning"></i>
                         <div>Pendientes</div>
                     </a>
                 </li>
+                
                 <li class="menu-item {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
                     <a href="{{ route('reportes.index') }}" class="menu-link">
-                        <i class="menu-icon ri {{ request()->routeIs('roles.*') ? 'ri-history-fill' : 'ri-history-line' }} bg-warning"></i>
-                        <div>Historial</div>
+                        <i class="menu-icon ri {{ request()->routeIs('reportes.*') ? 'ri-bar-chart-fill' : 'ri-bar-chart-line' }} bg-warning"></i>
+                        <div>Reportes</div>
                     </a>
                 </li>
             </ul>
         </li>
-        <li class="menu-item {{ request()->routeIs(['variables.*', 'subvariables.*', 'cabeceras.*', 'periodos.*', 'gestiones.*']) ? 'open' : '' }}">
+        <!-- <li class="menu-item {{ request()->routeIs(['variables.*', 'subvariables.*', 'cabeceras.*', 'periodos.*', 'gestiones.*']) ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri {{ request()->routeIs(['variables.*', 'subvariables.*', 'cabeceras.*', 'periodos.*', 'gestiones.*']) ? 'ri-settings-3-fill' : 'ri-settings-3-line' }} bg-warning"></i>
                 <div>Reportes Personales</div>
@@ -150,7 +157,7 @@
                     </a>
                 </li>
             </ul>
-        </li>
+        </li> -->
         @endif
     </ul>
 </aside>

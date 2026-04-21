@@ -3,6 +3,7 @@
 @section('title', 'Gestión de Roles')
 
 @section('content')
+<div class="row justify-content-end">
 
     <div class="col-md-4 mb-4">
         <div class="card card-action">
@@ -10,13 +11,14 @@
                 <h5 class="card-title">Crear un nuevo Rol</h5>
             </div>
             <div class="card-footer">
-                    <a href="{{ route('roles.create') }}" class="btn btn-card-action">
-                            
-                            <i class="ri ri-add-line fs-5"></i>&nbsp;&nbsp;&nbsp;Nuevo Rol
-                    </a>
+                <a href="{{ route('roles.create') }}" class="btn btn-card-action">
+                    
+                    <i class="ri ri-add-line fs-5"></i>&nbsp;&nbsp;&nbsp;Nuevo Rol
+                </a>
             </div>
         </div>
     </div>
+</div>
 
                     <div class="card" style="padding: 20px">
                         <div class="table-responsive text-nowrap">

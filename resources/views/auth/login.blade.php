@@ -20,7 +20,7 @@
             <label class="form-label">Nombre de usuario</label>
             <div class="input-group">
                 <span class="input-group-text bg-success"><i class="ri ri-user-line"></i></span>
-                <input type="text" name="name" value="{{ old('name') }}" class="form-control" required autofocus autocomplete="username">
+                <input type="text" name="name"  value="{{ old('name') }}" class="form-control" required autofocus autocomplete="username">
             </div>
             <x-input-error :messages="$errors->get('name')" class="text-danger mt-1" />
         </div>
@@ -29,7 +29,7 @@
             <label class="form-label">Contraseña</label>
             <div class="input-group">
                 <span class="input-group-text bg-danger"><i class="ri ri-lock-line"></i></span>
-                <input type="password" name="password" class="form-control" required>
+                <input type="password" name="password" class="form-control" value="{{ session('password') ? session('password') : '' }}" required>
             </div>
             <x-input-error :messages="$errors->get('password')" class="text-danger mt-1" />
         </div>

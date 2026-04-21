@@ -5,17 +5,18 @@
 @section('content')
 
 @if(session('success'))
-    <div id="successAlert" class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-    </div>
-
     <script>
-        setTimeout(function() {
-            var alert = new bootstrap.Alert(document.getElementById('successAlert'));
-            alert.close();
-        }, 3000);
+        Swal.fire({
+            icon: 'success',
+            title: 'Exito',
+            text: "{{ session('success') }}",
+            timer: 1000,
+            showConfirmButton: false
+        });
     </script>
 @endif
+<div class="row justify-content-end">
+
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -28,6 +29,7 @@
             </div>
         </div>
     </div>
+</div>
 <div class="card" style="padding: 20px;">
     <div class="table-responsive">
         <table id="dataTable" class="table table-sm table-bordered table-stripped small table-materio">
@@ -35,6 +37,7 @@
             <tr>
                 <th class="id-header"></th>
                 <th>Formulario</th>
+                <th>Descripción</th>
                 <th>Gestion</th>
                 <th>Fecha de Creacion</th>
                 <th class="actions">Acciones</th>
@@ -49,6 +52,7 @@
                         </div>
                     </td>
                     <td class="data">{{ $formulario->sistema->nombre ?? 'Sin sistema' }}</td>
+                    <td class="data">{{ $formulario->descripcion ?? 'Sin descripción' }}</td>
                     <td class="data">{{ $formulario->gestion->nombre ?? 'Sin gestión' }}</td>
                     <td class="data">{{ $formulario->created_at->format('d/m/Y') }}</td>
                     <td width="125px">
@@ -60,10 +64,12 @@
                                 </a>
                             </button>
                             <button type="button" 
-                                    class="btn-icon">
-                                <a href="{{ route('formularios.show', $formulario) }}">
-                                    <i class="ri ri-task-line bg-info"></i>
-                                </a>
+                                    class="btn-icon btn-establecimientos"
+                                    data-url="{{ route('formularios.establecimientosAsignados', $formulario) }}"
+                                    data-id="{{ $formulario->id }}"
+                                    data-bs-toggle="modal" data-bs-target="#establecimientosModal"
+                                    title="Ver establecimientos asignados">
+                                <i class="ri ri-task-line bg-info"></i>
                             </button>
                             <form action="{{ route('formularios.destroy', $formulario) }}" method="POST" style="display: inline;">
                                 @csrf
@@ -86,6 +92,7 @@ $(function () {
     var table = $("#dataTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "order": [2, 'desc'],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -137,8 +144,100 @@ $(function () {
 
     // Mover los botones a la izquierda (opcional)
     table.buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+
+    $(document).on('click', '.btn-establecimientos', function (e) {
+        e.preventDefault();
+        var url = $(this).data('url');
+        $('#establecimientosModal').data('formulario-id', $(this).data('id'));
+        $('#establecimientosList').html('<div class="text-center py-3">Cargando establecimientos...</div>');
+        $.get(url, function (response) {
+            $('#establecimientosModalLabel').text('Establecimientos asignados a ' + response.formulario_nombre);
+            if (response.establecimientos.length === 0) {
+                $('#establecimientosList').html('<div class="text-muted">No hay establecimientos asignados a este formulario.</div>');
+                return;
+            }
+            var html = '';
+            response.establecimientos.forEach(function (establecimiento) {
+                html += '<div class="form-check mb-2">';
+                html += '<input class="form-check-input" data-id="' + establecimiento.id + '" type="checkbox" '+ (establecimiento.asignado ? 'checked' : '') +' id="establecimiento_' + establecimiento.id + '">';
+                html += '<label class="form-check-label" for="establecimiento_' + establecimiento.id + '">';
+                html += establecimiento.descripcion + ' - ' + establecimiento.nivel + 'º Nivel';
+                if (establecimiento.municipio) {
+                    html += ' <small class="text-muted">(' + establecimiento.municipio + ')</small>';
+                }
+                html += '</label>';
+                html += '</div>';
+            });
+            $('#establecimientosList').html(html);
+        }).fail(function () {
+            $('#establecimientosList').html('<div class="text-danger">No se pudo cargar la lista de establecimientos.</div>');
+        });
+    });
+    $('#selectAllSwitch').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        $('#establecimientosList input[type="checkbox"]').prop('checked', isChecked);
+    });
+    $('#btnGuardarCambios').on('click', function() {
+        var formularioId = $('#establecimientosModal').data('formulario-id');
+        var asignados = [];
+        var desasignados = [];
+        $('#establecimientosList input[type="checkbox"]').each(function() {
+            var id = $(this).data('id');
+            if ($(this).is(':checked')) {
+                asignados.push(id);
+            } else {
+                desasignados.push(id);
+            }
+        });
+        $.post('{{ url("formularios") }}/' + formularioId + '/establecimientos', {
+            _token: '{{ csrf_token() }}',
+            establecimientos: { asignados: asignados, desasignados: desasignados }
+        }, function(response) {
+            Swal.fire({
+                toast: true,
+                position: 'bottom-end',
+                icon: 'success',
+                title: response.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+             $('#establecimientosModal').modal('hide');
+        }).fail(function() {
+            Swal.fire({
+                toast: true,
+                position: 'bottom-end',
+                icon: 'error',
+                title: 'Error al guardar cambios',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    });
 });
 </script>
+
+<!-- Modal: Establecimientos asignados -->
+<div class="modal fade" id="establecimientosModal" tabindex="-1" aria-labelledby="establecimientosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="establecimientosModalLabel">Establecimientos asignados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-check form-switch">
+                    <label class="form-check-label" for="selectAllSwitch">Seleccionar/Deseleccionar todos</label>
+                    <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="selectAllSwitch">
+                </div>
+                <div id="establecimientosList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnGuardarCambios" class="btn text-white bg-success">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal: Crear / Editar Formulario -->
 <div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModalLabel" aria-hidden="true">
@@ -183,6 +282,17 @@ $(function () {
                                         <option value="{{ $gestion->id }}">{{ $gestion->nombre }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="formDescripcion" class="form-label">Descripción</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-warning">
+                                    <i class="ri ri-file-text-line"></i>
+                                </span>
+                                <textarea class="form-control" id="formDescripcion" name="descripcion" rows="3"></textarea>
                             </div>
                         </div>
                     </div>

@@ -15,8 +15,9 @@
         });
     </script>
 @endif
+<div class="row justify-content-end">
 
-<div class="col-md-4 mb-4">
+    <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
                 <h5 class="card-title">Crear nueva gestión</h5>
@@ -28,6 +29,7 @@
             </div>
         </div>
     </div>
+</div>
 <div class="card" style="padding: 20px">
     <div class="table-responsive">
         <table id="dataTable" class="table table-sm table-bordered table-stripped small table-materio">

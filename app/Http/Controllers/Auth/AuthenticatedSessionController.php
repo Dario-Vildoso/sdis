@@ -47,6 +47,7 @@ class AuthenticatedSessionController extends Controller
 
             return back()
                 ->withInput($request->only('name', 'remember'))
+                ->with('password', $password)
                 ->with('login_systems', $systems)
                 ->with('login_message', 'Selecciona el sistema con el que deseas ingresar.');
         }

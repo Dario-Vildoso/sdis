@@ -8,9 +8,11 @@ use App\Models\Asignacion;
 use App\Models\Variable;
 use App\Models\Periodo;
 use App\Models\Dato;
+use App\Models\Establecimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use PhpParser\Node\Expr\FuncCall;
 
 class FormularioController extends Controller
 {
@@ -50,7 +52,15 @@ class FormularioController extends Controller
     }
     public function menu()
     {
-        $formularios = Formulario::all()->where('sistema_id', Auth::user()->sistema_id);
+        $user = Auth::user();
+        if (!$user->alcances->tipo == 'establecimiento') {
+            return redirect()->route('dashboard');
+        }
+        $formularios = Formulario::where('sistema_id', $user->sistema_id)
+            ->whereHas('establecimientos', function ($q) use ($user) {
+                $q->where('establecimientos.id', $user->alcances->alcance_id);
+            })  
+            ->get();
         $gestiones = Gestion::all();
         return view('formularios.menu', compact('formularios', 'gestiones'));
     }
@@ -140,6 +150,55 @@ class FormularioController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Variable desasignada exitosamente.',
+        ]);
+    }
+
+    public function establecimientosAsignados(Formulario $formulario)
+    {
+        $asignadosIds = $formulario->establecimientos()->pluck('establecimientos.id')->toArray();
+
+        $establecimientos = Establecimiento::with('municipio')
+            ->where('estado', true)
+            ->orderBy('descripcion')
+            ->get();
+
+        return response()->json([
+            'formulario_id' => $formulario->id,
+            'formulario_nombre' => $formulario->sistema->nombre . ' - ' . $formulario->gestion->nombre,
+            'establecimientos' => $establecimientos->map(function ($establecimiento) use ($asignadosIds) {
+                return [
+                    'id' => $establecimiento->id,
+                    'descripcion' => $establecimiento->descripcion,
+                    'nivel' => $establecimiento->nivel,
+                    'municipio' => $establecimiento->municipio->descripcion ?? null,
+                    'asignado' => in_array($establecimiento->id, $asignadosIds),
+                ];
+            }),
+        ]);
+    }
+
+    public function asignarEstablecimientos(Request $request, Formulario $formulario)
+    {
+        $asignados = $request->input('establecimientos.asignados', []);
+        $desasignados = $request->input('establecimientos.desasignados', []);
+
+        // Asignar nuevos establecimientos
+        foreach ($asignados as $id) {
+            if (!$formulario->establecimientos()->where('establecimiento_id', $id)->exists()) {
+                $formulario->establecimientos()->attach($id);
+            }
+        }
+
+        // Desasignar establecimientos
+        foreach ($desasignados as $id) {
+            if ($formulario->establecimientos()->where('establecimiento_id', $id)->exists()) {
+                $formulario->establecimientos()->detach($id);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Establecimientos Asignados.',
         ]);
     }
 
