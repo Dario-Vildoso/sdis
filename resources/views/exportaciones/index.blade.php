@@ -25,7 +25,7 @@
                         <option value="">Seleccione...</option>
                         @foreach($formularios as $item)
                             <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
-                                {{ $item->nombre }}
+                                {{ $item->sistema->nombre }} - {{ $item->gestion->nombre }}: {{ $item->descripcion }}
                             </option>
                         @endforeach
                     </select>
@@ -61,18 +61,19 @@
                         @endforeach
                     </select>
                 </div>
-
+                @if (Auth::user()->alcances->tipo == 'sedes')
                 <div class="col-md-4">
                     <label class="form-label">Redes (selección múltiple)</label>
                     <select name="red_ids[]" id="redSelect" class="form-select scope-select" multiple size="8">
                         @foreach($redesDisponibles as $red)
-                            <option value="{{ $red['id'] }}" {{ collect(old('red_ids', []))->contains($red['id']) ? 'selected' : '' }}>
-                                {{ $red['nombre'] }}
-                            </option>
+                        <option value="{{ $red['id'] }}" {{ collect(old('red_ids', []))->contains($red['id']) ? 'selected' : '' }}>
+                            {{ $red['nombre'] }}
+                        </option>
                         @endforeach
                     </select>
                 </div>
-
+                @endif
+                @if (Auth::user()->alcances->tipo == 'red' || Auth::user()->alcances->tipo == 'sedes')
                 <div class="col-md-4">
                     <label class="form-label">Municipios (selección múltiple)</label>
                     <select name="municipio_ids[]" id="municipioSelect" class="form-select scope-select" multiple size="8">
@@ -83,7 +84,7 @@
                         @endforeach
                     </select>
                 </div>
-
+                @endif
                 <div class="col-md-4">
                     <label class="form-label">Establecimientos (selección múltiple)</label>
                     <select name="establecimiento_ids[]" id="establecimientoSelect" class="form-select scope-select" multiple size="8">

@@ -115,8 +115,9 @@ class VariableController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Variable $variable)
+    public function destroy($id)
     {
+        $variable = Variable::findOrFail($id);
         $variable->delete();
         return redirect()->route('variables.index')->with('success', 'Variable eliminada exitosamente.');
     }

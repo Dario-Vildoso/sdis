@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Sub-variables')
 
 @section('content')
 
@@ -39,7 +39,9 @@
                 <th class="id-header"></th>
                 <th>Descripcion</th> 
                 <th>Variable</th>
+                @if (Auth::user()->hasPermissionTo('variables.management'))
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
@@ -76,6 +78,7 @@
                         <td class="data">
                             <span class="badge {{ $color }}">{{ $variableDesc }}</span>
                         </td>
+                        @if (Auth::user()->hasPermissionTo('variables.management'))
                         <td>
                             <button type="button"
                                     class="btn-icon edit-data"
@@ -95,6 +98,7 @@
                                 </button>
                             </form>
                         </td>
+                        @endif
                     </tr>
                 @endforeach
             @endforeach

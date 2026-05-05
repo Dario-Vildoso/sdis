@@ -13,4 +13,9 @@ class Periodo extends Model
         'fecha_inicio' => 'datetime',
         'fecha_fin' => 'datetime',
     ];
+
+    public function formulario()
+    {
+        return $this->belongsTo(Formulario::class);
+    }
 }

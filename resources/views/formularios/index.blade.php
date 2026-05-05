@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Formularios')
 
 @section('content')
 
@@ -16,7 +16,7 @@
     </script>
 @endif
 <div class="row justify-content-end">
-
+    @if (Auth::user()->hasPermissionTo('formularios.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -29,6 +29,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 <div class="card" style="padding: 20px;">
     <div class="table-responsive">
@@ -57,12 +58,6 @@
                     <td class="data">{{ $formulario->created_at->format('d/m/Y') }}</td>
                     <td width="125px">
                         <div class="dropdown">
-                            <button type="button"
-                                    class="btn-icon"> 
-                                <a href="{{ route('formularios.asignarVariables', $formulario) }}">
-                                    <i class="ri ri-pencil-line bg-success"></i>
-                                </a>
-                            </button>
                             <button type="button" 
                                     class="btn-icon btn-establecimientos"
                                     data-url="{{ route('formularios.establecimientosAsignados', $formulario) }}"
@@ -71,14 +66,24 @@
                                     title="Ver establecimientos asignados">
                                 <i class="ri ri-task-line bg-info"></i>
                             </button>
-                            <form action="{{ route('formularios.destroy', $formulario) }}" method="POST" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn-icon" type="submit"
-                                    onclick="return confirm('¿Eliminar formulario?')">
-                                    <i class="ri ri-delete-bin-line bg-danger"></i>
-                                </button>
-                            </form>
+                            @if (Auth::user()->hasPermissionTo('formularios.management'))
+                            <button type="button"
+                                    class="btn-icon edit-data"
+                                    data-id="{{ $formulario->id }}"
+                                    data-nombre="{{ $formulario->sistema->nombre }}"
+                                    data-descripcion="{{ $formulario->descripcion }}"
+                                    data-gestion_id="{{ $formulario->gestion_id }}"
+                                    data-bs-toggle="modal" data-bs-target="#dataModal"
+                                    title="Editar formulario">
+                                <i class="ri ri-pencil-line bg-success"></i>
+                            </button>
+                            <button type="button"
+                                    class="btn-icon" title="Asignar variables"> 
+                                <a href="{{ route('formularios.asignarVariables', $formulario) }}">
+                                    <i class="ri ri-table-line bg-warning"></i>
+                                </a>
+                            </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -159,7 +164,7 @@ $(function () {
             var html = '';
             response.establecimientos.forEach(function (establecimiento) {
                 html += '<div class="form-check mb-2">';
-                html += '<input class="form-check-input" data-id="' + establecimiento.id + '" type="checkbox" '+ (establecimiento.asignado ? 'checked' : '') +' id="establecimiento_' + establecimiento.id + '">';
+                html += '<input class="form-check-input" {{ Auth::user()->hasPermissionTo('formularios.management') ? '' : 'disabled' }} data-id="' + establecimiento.id + '" type="checkbox" '+ (establecimiento.asignado ? 'checked' : '') +' id="establecimiento_' + establecimiento.id + '">';
                 html += '<label class="form-check-label" for="establecimiento_' + establecimiento.id + '">';
                 html += establecimiento.descripcion + ' - ' + establecimiento.nivel + 'º Nivel';
                 if (establecimiento.municipio) {
@@ -225,10 +230,12 @@ $(function () {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
+                @if (Auth::user()->hasPermissionTo('formularios.management'))
                 <div class="form-check form-switch">
                     <label class="form-check-label" for="selectAllSwitch">Seleccionar/Deseleccionar todos</label>
                     <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="selectAllSwitch">
                 </div>
+                @endif
                 <div id="establecimientosList"></div>
             </div>
             <div class="modal-footer">
@@ -326,17 +333,17 @@ $(function () {
                 $(document).on('click', '.edit-data', function () {
                         var id = $(this).data('id');
                         var nombre = $(this).data('nombre');
+                        var descripcion = $(this).data('descripcion');
                         var gestionId = $(this).data('gestion_id'); 
 
                         $('#formModalLabel').text('Editar formulario');
                         $('#dataForm').attr('action', baseUrl + '/' + id);
                         $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
                         $('#formNombre').val(nombre);
+                        $('#formDescripcion').val(descripcion);
                         $('#formGestion').val(gestionId);
                         $('#dataSubmit').text('Actualizar');
 
-                        var dataModal = new bootstrap.Modal(document.getElementById('dataModal'));
-                        dataModal.show();
                 });
                 $('#dataForm').on('submit', function() {
                     $('#dataSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...');

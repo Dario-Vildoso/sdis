@@ -28,8 +28,15 @@ $currVars = [];
 
 @endphp
 
-<h3>Formulario: {{ $formulario->nombre }}</h3>
 
+<div class="d-flex align-items-center my-3">
+    <hr class="flex-grow-1">
+    <h3 class="mx-3 text-center mb-0">
+        {{ $formulario->sistema->nombre }} - {{ $formulario->gestion->nombre }}: {{ $formulario->descripcion }}
+    </h3>
+    <hr class="flex-grow-1">
+</div>
+<div class="card" style="padding: 20px;">
 @foreach($formulario->variables as $variable)
 
 @php
@@ -58,22 +65,28 @@ $rows = $buildRows($variable->cabeceras);
 
 @endphp
 <div class="containerTabla" data-variable-id="{{ $variable->id }}">
-<div class="d-flex justify-content-end buttons">
+<div class="d-flex justify-content-end buttons mb-3">
 
     <div class="btn-group btn-group-sm">
         <a href="{{ route('variables.tabla', ['variable' => $variable->id, 'form' => $formulario->id]) }}" class="btn btn-warning edit-variable"
-            data-id="{{ $variable->id }}">
+            data-id="{{ $variable->id }}" style="border: none;
+            border-radius: 5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;">
             <i class="ri ri-edit-fill"></i>
         </a>
         <button class="btn btn-danger delete-variable"
-            data-id="{{ $variable->id }}">
+            data-id="{{ $variable->id }}"  style="border: none;
+            border-radius: 5rem;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;">
             <i class="ri ri-delete-bin-fill"></i>
         </button>
     </div>  
 </div>
 <div class="table-responsive">
 
-    <table class="table table-sm small table-materio mb-5">
+    <table class="table table-sm small table-materio table-variable" id="tablaVariable">
         
         <thead>
             
@@ -87,8 +100,7 @@ $rows = $buildRows($variable->cabeceras);
             
                 @foreach($rows[0] ?? [] as $cabecera)
                 <th colspan="{{ countLeaves($cabecera) }}"
-                        class="text-center bg-secondary text-white cabecera-cell"
-                        style="background: {{ $loop->even ? '#9d9fa3 !important' : '#9d9fa3 !important' }}">
+                        class="text-center bg-secondary text-white cabecera-cell">
                         {{ $cabecera->descripcion }}
                     </th>
                     @endforeach
@@ -119,28 +131,27 @@ $rows = $buildRows($variable->cabeceras);
                     class="text-center variable-cell"
                     style="border-radius: 0 0 0 0; padding: 8px 10px;"
                     >
-                    
                 </th>
                 @endif
                 @endif
                 @foreach($rows[$i] ?? [] as $cabecera)
                         @php
-                            $hue = 213 - ($i * 3);   
-                            $saturation = 10;
-                            $lightness = 82 - ($i * 5);
+                            $hue = 176 + ($i * 3);
+                            $saturation = 78 - ($i * 5);
+                            $lightness = 34 - ($i * 2);
                         @endphp
                         <!-- hsl(213, 30%, 32%) -->
                         @if($cabecera->hijos->isEmpty() && $vallength < $rowlenght)
                         <th rowspan="{{ $niveles - $i }}"
-                        class="text-center subcabecera-cell"
-                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                        class="text-center"
+                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%) !important;"
                         >
                         {{ $cabecera->descripcion[0] }}
                     </th>
                         @else
                         <th colspan="{{ countLeaves($cabecera) }}"
                         class="text-center subcabecera-cell"
-                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%)"
+                        style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%) !important;"
                         >
                         {{ $cabecera->descripcion }}
                     </th>
@@ -178,7 +189,7 @@ $rows = $buildRows($variable->cabeceras);
     <hr>
 </div>
 @endforeach
-
+</div>
 <div class="mt-3 mb-3">
     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVariableModal" title="Agregar subvariable">
         <i class="ri fs-5 ri-add-line"></i>&nbsp; Agregar Variable
@@ -278,7 +289,7 @@ $rows = $buildRows($variable->cabeceras);
                             </div>
                         </td>
                         <td>
-                            <button class="btn btn-success btn-icon add-variable"
+                            <button class="btn-icon add-variable"
                                 data-id="{{ $variable->id }}"
                                 @if (in_array($variable->id, $currVars))
                                     disabled
@@ -295,7 +306,7 @@ $rows = $buildRows($variable->cabeceras);
 
                 </table>
 
-                <button class="btn btn-primary mb-3" id="btnNuevaVariable">
+                <button class="btn mb-3 text-white" id="btnNuevaVariable" style="background-color: #17a2b8">
                    + Nueva variable
                 </button>
 
@@ -441,20 +452,20 @@ $rows = $buildRows($variable->cabeceras);
 <style>
     table.table-materio th.cabecera-cell {
         border: none;
-        border-radius: 0 20px 0 0;
-        padding: 8px 10px !important;
+        padding: 10px 5px;
+        font-size: x-small;
+        border-left: 1px solid #dee2e6;
+        background-color: #139b92 !important;
     }
     table.table-materio th.variable-cell {
         border: none;
-        background: hsl(199, 15%, 61%) !important;
-        
-        border-radius: 0 20px 0 0;
-        padding: 0;
+        background-color: #086375 !important;
     }
     table.table-materio th.subcabecera-cell {
         border: none;
-        border-radius: 0 0 0 0;
-        padding: 8px 10px !important;
+        border-left: 1px solid #dee2e6;
+        padding: 10px 5px;
+        font-size: x-small
     }
     table.table-materio td.subvariable-cell {
         background: hsl(199, 12%, 45%) !important;
@@ -462,6 +473,18 @@ $rows = $buildRows($variable->cabeceras);
     }
     table.table-materio td.data {
         padding: 5px 10px !important;
+    }
+    .btn-group .btn{
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+    .btn{
+            border: none;
+            border-radius: 40px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
     }
     
 </style>

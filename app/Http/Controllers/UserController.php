@@ -29,7 +29,7 @@ class UserController extends Controller
                 $query->where('sistema_id', Auth::user()->sistema_id);
             })
             ->get();
-        $unsignedUsers = Auth::user()->hasRole('super-admin')? [] : User::with('alcances')
+        $unsignedUsers = User::with('alcances')
             ->whereDoesntHave('sistemas', function ($query) {
                 $query->where('sistema_id', Auth::user()->sistema_id);
             })
@@ -39,13 +39,53 @@ class UserController extends Controller
             'municipio'      => $users->where('alcances.tipo', 'municipio')->count(),
             'establecimiento'=> $users->where('alcances.tipo', 'establecimiento')->count(),
         ];
-        $roles = Role::all();
+        $roles = Role::all()->whereNotIn('slug', ['super-admin']);
         $establecimientos = Establecimiento::all();
         $municipios = Municipio::all();
         $redes = Red::all();
         $alcances = Alcance::all();
-         $users->each(function ($user) use ($alcances) {
-            $user->alcance = $alcances->where('usuario_id', $user->id)->first();
+        $users->each(function ($user) use ($alcances) {
+
+            $alcance = $alcances->where('usuario_id', $user->id)->first();
+
+            // valores por defecto
+            $user->establecimiento = null;
+            $user->municipio = null;
+            $user->red = null;
+
+            if (!$alcance) return;
+
+            switch ($alcance->tipo) {
+
+                case 'establecimiento':
+                    $est = Establecimiento::with('municipio.red')
+                        ->find($alcance->alcance_id);
+
+                    if ($est) {
+                        $user->establecimiento = $est->descripcion;
+                        $user->municipio = $est->municipio->nombre ?? null;
+                        $user->red = $est->municipio->red->nombre ?? null;
+                    }
+                    break;
+
+                case 'municipio':
+                    $mun = Municipio::with('red')
+                        ->find($alcance->alcance_id);
+
+                    if ($mun) {
+                        $user->municipio = $mun->nombre;
+                        $user->red = $mun->red->nombre ?? null;
+                    }
+                    break;
+
+                case 'red':
+                    $red = Red::find($alcance->alcance_id);
+
+                    if ($red) {
+                        $user->red = $red->nombre;
+                    }
+                    break;
+            }
         });
         $sistemas = Sistema::all();
         return view('users.index', compact('users', 'unsignedUsers', 'roles', 'establecimientos', 'municipios', 'redes', 'conteos', 'sistemas'));
@@ -75,7 +115,7 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->password = Hash::make($request->password);
         $user->save();
-        if(Auth::user()->hasRole('super-admin')){
+        if(Auth::user()->hasPermissionTo('users.sistemas')){
             $user->sistemas()->attach($request->sistemas);
             $user->sistema_id = $request->sistemas[0];
             $user->save();
@@ -86,7 +126,7 @@ class UserController extends Controller
         }
         $user->assignRole(ROle::findOrFail($request->role));
         $user->load('roles');
-        if ($user->hasRole('reportes')) {
+        if ($user->hasPermissionTo('users.operators')) {
             switch ($request->tipo) {
                 case 'establecimiento':
                     Alcance::create([
@@ -160,7 +200,7 @@ class UserController extends Controller
         }
         $user->save();
 
-        if (Auth::user()->hasRole('super-admin')) {
+        if (Auth::user()->hasPermissionTo('users.sistemas')) {
             $user->sistemas()->sync($request->sistemas);
         }
 
@@ -168,7 +208,7 @@ class UserController extends Controller
 
         $user->load('roles');
 
-        if ($user->hasRole('reportes')) {
+        if ($user->hasPermissionTo('users.operators')) {
 
             $alcanceId = match ($request->tipo) {
                 'establecimiento' => $request->establecimiento,

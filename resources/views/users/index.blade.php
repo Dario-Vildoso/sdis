@@ -91,44 +91,39 @@
             <thead>
             <tr>
                 <th class="id-header"></th>
+                <th>Red</th>
+                <th>Municipio</th>
+                <th>Establecimiento</th>
                 <th>Nombre</th>
-                <th>Roles</th>
-                <th>Estado</th>
+                <th>Rol</th>
+                @if (Auth::user()->hasPermissionTo('users.management'))                
+                <th>Habilitar</th>
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
             @foreach($users as $user)
                 <tr>
                     <td class="id-cell">
-                        <div 
-                        @switch($user->alcances->tipo ?? '')
-                            @case('red')
-                                style="background: linear-gradient(90deg, #037ed6, #0066ae); color: white;"
-                                @break
-                            @case('municipio')
-                                style="background: linear-gradient(90deg, #ffc107, #ff9800); color: white;"
-                                @break
-                            @case('establecimiento')
-                                style="background: linear-gradient(90deg, #1ab817, #019617); color: white;"
-                                @break
-                            @default
-                                style="background: linear-gradient(90deg, #6c757d, #495057); color: white;"
-                        @endswitch
-                        >
+                        <div>
                             <strong>{{ $user->id }}</strong>
                         </div>
                     </td>
+                    <td>{{ $user->red }}</td>
+                    <td>{{ $user->municipio }}</td>
+                    <td>{{ $user->establecimiento }}</td>
                     <td class="data">{{ $user->name }}</td>
                     <td class="data">
                         @if($user->roles && $user->roles->count() > 0)
                             @foreach($user->roles as $role)
-                                <span class="badge bg-info me-1 small">{{ $role->name }}</span>
+                                {{ $role->name }}
                             @endforeach
                         @else
                             <span class="text-muted small">Sin roles</span>
                         @endif
                     </td>
+                    @if (Auth::user()->hasPermissionTo('users.management'))
                     <td>
                         <div class="form-check form-switch">
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $user->id }}" data-id="{{ $user->id }}" {{ $user->estado ? 'checked' : '' }}>
@@ -149,7 +144,7 @@
                                 >
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
-
+                        @if (Auth::user()->hasRole('super-admin'))
                         <form action="{{ route('users.destroy', $user) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
@@ -158,80 +153,15 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
-@if(! Auth::user()->hasRole('super-admin'))
-<div class="card" style="padding: 20px;">
-    <div class="card-header">
-        <h6 class="mb-0">
-            <i class="fs-5 ri ri-user-unfollow-line bg-secondary text-white"></i> Usuarios sin sistema asignado
-        </h6>
-    </div>
-    <div class="table-responsive">
-        <table id="unsignedUsersTable" class="table table-sm table-bordered table-stripped small table-materio">
-            <thead>
-            <tr>
-                <th class="id-header"></th>
-                <th>Nombre</th>
-                <th>Roles</th>
-                <th class="actions">Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($unsignedUsers as $user)
-                <tr>
-                    <td class="id-cell">
-                        <div 
-                        @switch($user->alcances->tipo ?? '')
-                            @case('red')
-                                style="background: linear-gradient(90deg, #037ed6, #0066ae); color: white;"
-                                @break
-                            @case('municipio')
-                                style="background: linear-gradient(90deg, #ffc107, #ff9800); color: white;"
-                                @break
-                            @case('establecimiento')
-                                style="background: linear-gradient(90deg, #1ab817, #019617); color: white;"
-                                @break
-                            @default
-                                style="background: linear-gradient(90deg, #6c757d, #495057); color: white;"
-                        @endswitch
-                        >
-                            <strong>{{ $user->id }}</strong>
-                        </div>
-                    </td>
-                    <td class="data">{{ $user->name }}</td>
-                    <td class="data">
-                        @if($user->roles && $user->roles->count() > 0)
-                            @foreach($user->roles as $role)
-                                <span class="badge bg-info me-1 small">{{ $role->name }}</span>
-                            @endforeach
-                        @else
-                            <span class="text-muted small">Sin roles</span>
                         @endif
                     </td>
-                    <td class="justify-content-center d-flex">
-
-                        <form action="{{ route('users.assignsystem', $user) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('PUT')
-                            <button class="btn-icon" type="submit" title="Asignar al sistema"
-                                onclick="return confirm('¿Asignar Usuario al Sistema?')">
-                                <i class="ri ri-add-fill fs-4 bg-success"></i>
-                            </button>
-                        </form>
-                    </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>
         </table>
     </div>
 </div>
-@endif
 <script>
     // AJAX setup for CSRF token
     $.ajaxSetup({
@@ -290,6 +220,7 @@ $(function () {
     var table = $("#usersTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "order": [],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -339,52 +270,11 @@ $(function () {
         "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
     });
 
-    // Mover los botones a la izquierda (opcional)
-    table.buttons().container().appendTo('#usersTable_wrapper .col-md-6:eq(0)');
-    var table = $("#unsignedUsersTable").DataTable({
-        "pageLength": 5,                    // Cambié de 6 a 10 (más estándar)
-        "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        "language": {
-            "emptyTable": "No hay información",
-            "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-            "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-            "infoFiltered": "(Filtrado de _MAX_ total registros)",
-            "infoPostFix": "",
-            "thousands": ",",
-            "lengthMenu": "",
-            "loadingRecords": "Cargando...",
-            "processing": "Procesando...",
-            "search": '<i class="ri ri-search-line"></i>',
-            "searchPlaceholder": "Buscar...",
-            "zeroRecords": "Sin resultados encontrados",
-            
-            "paginate": {
-                "first": "Primero",
-                "last": "Ultimo",
-                "next": "Siguiente",
-                "previous": "Anterior"
-            }
-            
-        },
-        
-        "responsive": true, "lengthChange": true, "autoWidth": false,
-
-        
-        // === BOTONES (Exportar + Acciones) ===
-        
-        // Opciones recomendadas para mejor experiencia
-        "pagingType": "full_numbers",
-        "scrollX": true,                    // Útil si tienes muchas columnas
-        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
-    });
-
-    // Mover los botones a la izquierda (opcional)
-    table.buttons().container().appendTo('#unsignedUsersTable_wrapper .col-md-6:eq(0)');
 });
 </script>
 
 <!-- Modal: Crear / Editar Usuario -->
-<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+<div class="modal fade" id="userModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             
@@ -396,7 +286,50 @@ $(function () {
 
             </div>
 <hr>
-            <div class="modal-body pt-2">
+            <div class="modal-body">
+                    <table id="unsignedUsersTable" class="table table-sm table-hover">
+                        <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Roles</th>
+                            <th>Tipo</th>
+                            <th class="actions">Asignar</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($unsignedUsers as $user)
+                            <tr>
+                                <td>{{ $user->name }}</td>
+                                <td>
+                                    @if($user->roles && $user->roles->count() > 0)
+                                        @foreach($user->roles as $role)
+                                            {{$role->name}}
+                                        @endforeach
+                                    @else
+                                        Sin roles
+                                    @endif
+                                </td>
+                                <td>{{ strtoupper($user->alcances?->tipo) }}</td>
+                                <td class="justify-content-center d-flex">
+
+                                    <form action="{{ route('users.assignsystem', $user) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('PUT')
+                                        <button class="btn-icon" type="submit" title="Asignar al sistema"
+                                            onclick="return confirm('¿Asignar Usuario al Sistema?')">
+                                            <i class="ri ri-add-fill fs-4 bg-success"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                <button class="btn mb-3 text-white" id="btnNuevoUsuario" style="background-color: #17a2b8" onclick="$('#formNewUser').slideDown();">
+                   + Nuevo usuario
+                </button>
+                <div id="formNewUser" style="display: none;">
+                    <hr>
                 <form id="userForm" method="POST">
                     @csrf
                     <input type="hidden" name="_method" id="formMethod" value="">
@@ -437,9 +370,15 @@ $(function () {
                             <div class="input-group">
                                 <span class="input-group-text bg-warning"><i class="ri ri-shield-user-line"></i></span>
                                 <select class="form-select" id="userRoles" name="role" required>
-                                    <option value="">Seleccione un rol...</option>
+                                    <option value="" data-rol="none">Seleccione un rol...</option>
                                     @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    @if ($role->slug != 'admin')
+                                        <option value="{{ $role->id }}" data-alcance="{{ $role->hasPermissionTo('users.operators') }}">{{ strtoupper($role->name) }}</option>
+                                    @else
+                                        @if (Auth::user()->hasPermissionTo('users.admins'))
+                                        <option value="{{ $role->id }}" data-rol="{{ $role->slug }}" disabled>{{ strtoupper($role->slug) }}</option>
+                                        @endif
+                                    @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -447,7 +386,7 @@ $(function () {
 
                         <!-- Tipo de Alcance -->
                         <div class="col-md-6" id="typeField">
-                            <label class="form-label fw-medium">Tipo de Alcance</label>
+                            <label class="form-label fw-medium">Nivel</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-info"><i class="ri ri-map-pin-line"></i></span>
                                 <select class="form-select" id="scopeType" name="tipo">
@@ -460,7 +399,7 @@ $(function () {
                             </div>
                         </div>
 
-                        <div class="col-md-6 d-none" id="redField">
+                        <div class="col-md-6 alcance d-none" id="redField">
                             <label class="form-label fw-medium">Red</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-info"><i class="ri ri-node-tree"></i></span>
@@ -473,7 +412,7 @@ $(function () {
                             </div>
                         </div>
 
-                        <div class="col-md-6 d-none" id="municipioField">
+                        <div class="col-md-6 alcance d-none" id="municipioField">
                             <label class="form-label fw-medium">Municipio</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-info"><i class="ri ri-building-2-line"></i></span>
@@ -486,7 +425,7 @@ $(function () {
                             </div>
                         </div>
 
-                        <div class="col-md-6 d-none" id="establecimientoField">
+                        <div class="col-md-6 alcance d-none" id="establecimientoField">
                             <label class="form-label fw-medium">Establecimiento</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-info"><i class="ri ri-hospital-line"></i></span>
@@ -498,7 +437,7 @@ $(function () {
                                 </select>
                             </div>
                         </div>
-                        @if(Auth::user()->hasRole('super-admin'))
+                        @if(Auth::user()->hasPermissionTo('users.sistemas'))
                         <hr>
                             <!-- Sistema -->
                         <div class="col-12">
@@ -523,28 +462,56 @@ $(function () {
                         </button>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    $(function () {
+        $("#unsignedUsersTable").DataTable({
+            "pageLength": 5,
+            "language": {
+                "emptyTable": "No hay información",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                "infoFiltered": "(Filtrado de _MAX_ total registros)",
+                "infoPostFix": "",
+                "thousands": ",",
+                "lengthMenu": "",
+                "loadingRecords": "Cargando...",
+                "processing": "Procesando...",
+                "search": "Buscador:",
+                "zeroRecords": "Sin resultados encontrados",
+                "paginate": {
+                    "first": "Primero",
+                    "last": "Ultimo",
+                    "next": "Siguiente",
+                    "previous": "Anterior"
+                }
+            },
+            "responsive": true, "lengthChange": true, "autoWidth": false,
 
+        }).buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+    });
+</script>
 <script>
         $(function () {
                 // Base URL for update action
                 var baseUrl = "{{ url('users') }}";
-                $('#userRoles').on('change', function () {
-                    var selectedRole = this.options[this.selectedIndex].text.toString().toLowerCase();
-                    if (selectedRole === 'reportes') {
-                            $('#typeField').removeClass('d-none').prop('required', true);
+                function setTypeField() {
+                    var alcance = $('#userRoles option:selected').data('alcance');
+                    if (alcance == '1') {
+                        $('#typeField').removeClass('d-none').prop('required', true);
                     } else {
-                            $('#typeField').addClass('d-none').prop('required', false);
-                            $('#establecimientoField').addClass('d-none').prop('required', false);
-                            $('#municipioField').addClass('d-none').prop('required', false);
-                            $('#redField').addClass('d-none').prop('required', false);
+                        $('#typeField').addClass('d-none').prop('required', false);
+                        $('#establecimientoField').addClass('d-none').prop('required', false);
+                        $('#municipioField').addClass('d-none').prop('required', false);
+                        $('#redField').addClass('d-none').prop('required', false);
                     }
-                })
-                $('#scopeType').on('change', function () {
-                    var selectedType = $(this).val();
+                }
+                function setScopeField() {
+                    var selectedType = $('#scopeType').val();
                     if (selectedType === 'establecimiento') {
                             $('#establecimientoField').removeClass('d-none').prop('required', true);
                             $('#municipioField').addClass('d-none').prop('required', false);
@@ -557,7 +524,17 @@ $(function () {
                             $('#establecimientoField').addClass('d-none').prop('required', false);
                             $('#municipioField').addClass('d-none').prop('required', false);
                             $('#redField').removeClass('d-none').prop('required', true);
+                    } else {
+                            $('#establecimientoField').addClass('d-none').prop('required', false);
+                            $('#municipioField').addClass('d-none').prop('required', false);
+                            $('#redField').addClass('d-none').prop('required', false);
                     }
+                }
+                $('#userRoles').on('change', function () {
+                    setTypeField();
+                })
+                $('#scopeType').on('change', function () {
+                    setScopeField();
                 })
 
                 // New user: reset form
@@ -570,6 +547,9 @@ $(function () {
                         $('#passwordField').removeClass('d-none'); // Muestra el campo de contraseña al crear
                         $('#userPassword').prop('required', true).val('');
                         $('#userSubmit').text('Crear');
+                        $('#userRoles').val('');
+                        setTypeField();
+                        setScopeField();
                 });
 
                 // Edit user: populate and set action
@@ -596,30 +576,10 @@ $(function () {
                         $('#passwordField').addClass('d-none'); // Oculta el campo de contraseña al editar
                         $('#userPassword').prop('required', false).val('');
                         $('#userRoles').val(rolId);
-                        if (rol == 'reportes'){
-                            $('#typeField').removeClass('d-none').prop('required', true);
-                            $('#scopeType').val(tipo)
-                            switch (tipo) {
-                                case 'establecimiento':
-                                    $('#establecimientoField').removeClass('d-none').prop('required', true);
-                                    $('#municipioField').addClass('d-none').prop('required', false);
-                                    $('#redField').addClass('d-none').prop('required', false);
-                                    $('#scopeEst').val(alcance);
-                                    break;
-                                case 'municipio':
-                                    $('#municipioField').removeClass('d-none').prop('required', true);
-                                    $('#establecimientoField').addClass('d-none').prop('required', false);
-                                    $('#redField').addClass('d-none').prop('required', false);
-                                    $('#scopeMun').val(alcance);
-                                    break;
-                                case 'red':
-                                    $('#redField').removeClass('d-none').prop('required', true);
-                                    $('#establecimientoField').addClass('d-none').prop('required', false);
-                                    $('#municipioField').addClass('d-none').prop('required', false);
-                                    $('#scopeRed').val(alcance);
-                                    break;
-                            }
-                        }
+                        setTypeField();
+                        $('#scopeType').val(tipo)
+                        setScopeField();
+                        $('.alcance select.form-select').val(alcance);
                         $('#userSistemas').val(sistemas);
                         $('#userSubmit').text('Actualizar');
 

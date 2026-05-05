@@ -21,6 +21,7 @@
             <thead>
             <tr>
                 <th>Nombre</th>
+                <th>Descripcion</th>
                 <th>Gestion</th>
                 <th>Periodo</th>
                 <th>Inicio</th>
@@ -34,11 +35,12 @@
             
             <tr>
                 <td class="data">{{ $formulario->sistema->nombre ?? 'Sin sistema' }}</td>
+                <td class="data">{{ $formulario->descripcion ?? 'Sin descripción' }}</td>
                 <td class="data">{{ $gestiones->where('id', $formulario->gestion_id)->first()->nombre ?? 'Sin gestión' }}</td>
-                    <td class="data">{{ $periodo->descripcion }}</td>
-                    <td class="data">{{ $periodo->fecha_inicio }}</td>
-                    <td class="data">{{ $periodo->fecha_fin }}</td>
-                    <td style="width: 20px">
+                <td class="data">{{ $periodo->descripcion }}</td>
+                <td class="data">{{ $periodo->fecha_inicio }}</td>
+                <td class="data">{{ $periodo->fecha_fin }}</td>
+                <td style="width: 20px">
                         <!-- <button type="button"
                         class="btn btn-icon edit-data"
                         data-id="{{ $formulario->id }}"

@@ -6,11 +6,12 @@ use App\Models\User;
 use App\Models\Red;
 use App\Models\Municipio;
 use App\Models\Establecimiento;
-use App\Models\Periodo;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Variable;
 use App\Models\Cabecera;
 use App\Models\SubVariable;
-use App\Models\Dato;
+use App\Models\Sistema;
 use App\Models\Formulario;
 use App\Models\Gestion;
 use App\Models\Asignacion;
@@ -27,6 +28,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
+        
+        // Crear Sistemas
+        $SDIS = Sistema::firstOrCreate(
+            ['nombre' => 'SDIS'],
+        );
+        $Vigilancia = Sistema::firstOrCreate(
+            ['nombre' => 'Vigilancia'],
+        );
+        $Hospitales = Sistema::firstOrCreate(
+            ['nombre' => 'Hospitales'],
+        );
 
         Red::create([
             'nombre' => 'RED DE SALUD I SUCRE',
@@ -213,28 +225,24 @@ class DatabaseSeeder extends Seeder
             'id_mun' => 1,
             'estado' => true,
             'codigo_est' => 'CSC001',
-            'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Puesto de Salud Tablas',
             'id_mun' => 2,
             'estado' => true,
             'codigo_est' => 'PST001',
-            'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Centro de Salud San Lucas',
             'id_mun' => 28,
             'estado' => true,
             'codigo_est' => 'CSL001',
-            'gestion' => 2026,
         ]);
         Establecimiento::create([
             'descripcion' => 'Centro de Salud Padilla',
             'id_mun' => 8,
             'estado' => true,
             'codigo_est' => 'CSP001',
-            'gestion' => 2026,
         ]);
 
         // GESTIONES (2020-2027)
@@ -334,53 +342,179 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // FORMULARIOS para diferentes gestiones
-        $form2026 = Formulario::create([
-            'nombre' => 'Reporte Mensual 2026',
-            'gestion_id' => 7, // 2026
-        ]);
-        $form2025 = Formulario::create([
-            'nombre' => 'Reporte Anual 2025',
-            'gestion_id' => 6, // 2025
-        ]);
-        $form2024 = Formulario::create([
-            'nombre' => 'Reporte Semestral 2024',
-            'gestion_id' => 5, // 2024
-        ]);
+        foreach ([$SDIS, $Vigilancia, $Hospitales] as $sistema) {
+            $form2026 = Formulario::create([
+                'descripcion' => 'Reporte Mensual 2026',
+                'gestion_id' => 7, // 2026
+                'sistema_id' => $sistema->id,
+            ]);
+            $form2025 = Formulario::create([
+                'descripcion' => 'Reporte Anual 2025',
+                'gestion_id' => 6, // 2025
+                'sistema_id' => $sistema->id,
+            ]);
+            $form2024 = Formulario::create([
+                'descripcion' => 'Reporte Semestral 2024',
+                'gestion_id' => 5, // 2024
+                'sistema_id' => $sistema->id,
+            ]);
+    
+            // ASIGNACIONES - Variables asignadas a Formularios
+            Asignacion::create([
+                'variable_id' => $var1->id,
+                'formulario_id' => $form2026->id,
+            ]);
+            Asignacion::create([
+                'variable_id' => $var2->id,
+                'formulario_id' => $form2026->id,
+            ]);
+            Asignacion::create([
+                'variable_id' => $var3->id,
+                'formulario_id' => $form2026->id,
+            ]);
+    
+            Asignacion::create([
+                'variable_id' => $var1->id,
+                'formulario_id' => $form2025->id,
+            ]);
+            Asignacion::create([
+                'variable_id' => $var4->id,
+                'formulario_id' => $form2025->id,
+            ]);
+            Asignacion::create([
+                'variable_id' => $var5->id,
+                'formulario_id' => $form2025->id,
+            ]);
+    
+            Asignacion::create([
+                'variable_id' => $var2->id,
+                'formulario_id' => $form2024->id,
+            ]);
+            Asignacion::create([
+                'variable_id' => $var5->id,
+                'formulario_id' => $form2024->id,
+            ]);
+        }
 
-        // ASIGNACIONES - Variables asignadas a Formularios
-        Asignacion::create([
-            'variable_id' => $var1->id,
-            'formulario_id' => $form2026->id,
-        ]);
-        Asignacion::create([
-            'variable_id' => $var2->id,
-            'formulario_id' => $form2026->id,
-        ]);
-        Asignacion::create([
-            'variable_id' => $var3->id,
-            'formulario_id' => $form2026->id,
-        ]);
+        $formularios = Formulario::all();
+        $establecimientos = Establecimiento::pluck('id');
 
-        Asignacion::create([
-            'variable_id' => $var1->id,
-            'formulario_id' => $form2025->id,
-        ]);
-        Asignacion::create([
-            'variable_id' => $var4->id,
-            'formulario_id' => $form2025->id,
-        ]);
-        Asignacion::create([
-            'variable_id' => $var5->id,
-            'formulario_id' => $form2025->id,
-        ]);
+        $formularios->each(function ($formulario) use ($establecimientos) {
+            $formulario->establecimientos()->syncWithoutDetaching($establecimientos);
+        });
 
-        Asignacion::create([
-            'variable_id' => $var2->id,
-            'formulario_id' => $form2024->id,
-        ]);
-        Asignacion::create([
-            'variable_id' => $var5->id,
-            'formulario_id' => $form2024->id,
-        ]);
+        $permissions = [
+            // Permisos de Usuarios
+            ['name' => 'Ver usuarios', 'slug' => 'users.view', 'description' => 'Ver lista de usuarios'],
+            ['name' => 'Gestionar usuarios', 'slug' => 'users.management', 'description' => 'Crear, Editar, Eliminar, Activar y Desactivar usuarios'],
+            ['name' => 'Gestionar sistemas de usuario', 'slug' => 'users.sistemas', 'description' => 'Asignar y Desasignar sistemas de usuario'],
+            ['name' => 'Asignar administradores', 'slug' => 'users.admins', 'description' => 'Asignar y Desasignar administradores'],
+            ['name' => 'Alcances de Operadores', 'slug' => 'users.operators', 'description' => 'Permite que el usuario tenga alcances de operador (Establecimiento, Municipio o Red)'],
+
+            // Permisos de Roles
+            ['name' => 'Ver roles', 'slug' => 'roles.view', 'description' => 'Ver lista de roles'],
+            ['name' => 'Gestionar roles', 'slug' => 'roles.management', 'description' => 'Crear, Editar, Eliminar, Asignar y Desasignar roles'],
+
+            // Permisos de Formularios
+            ['name' => 'Ver formularios', 'slug' => 'formularios.view', 'description' => 'Ver formularios'],
+            ['name' => 'Gestionar formularios', 'slug' => 'formularios.management', 'description' => 'Crear, Editar, Eliminar Formularios'],
+            ['name' => 'Enviar formularios', 'slug' => 'formularios.submit', 'description' => 'Subir formularios'],
+
+            // Permisos de Periodos
+            ['name' => 'Ver periodos', 'slug' => 'periodos.view', 'description' => 'Ver periodos'],
+            ['name' => 'Gestionar periodos', 'slug' => 'periodos.management', 'description' => 'Crear, Editar, Eliminar Periodos'],
+
+            // Permisos de Gestiones
+            ['name' => 'Ver gestiones', 'slug' => 'gestiones.view', 'description' => 'Ver gestiones'],
+            ['name' => 'Gestionar gestiones', 'slug' => 'gestiones.management', 'description' => 'Crear, Editar, Eliminar Gestiones'],
+
+            // Permisos de Variables
+            ['name' => 'Ver variables', 'slug' => 'variables.view', 'description' => 'Ver variables'],
+            ['name' => 'Gestionar variables', 'slug' => 'variables.management', 'description' => 'Crear, Editar, Eliminar Variables'],
+
+            // Permisos de Establecimientos
+            ['name' => 'Ver establecimientos', 'slug' => 'establecimientos.view', 'description' => 'Ver establecimientos'],
+            ['name' => 'Gestionar establecimientos', 'slug' => 'establecimientos.management', 'description' => 'Crear, Editar, Eliminar Establecimientos'],
+
+            // Permisos de Municipios
+            ['name' => 'Ver municipios', 'slug' => 'municipios.view', 'description' => 'Ver municipios'],
+            ['name' => 'Gestionar municipios', 'slug' => 'municipios.management', 'description' => 'Crear, Editar, Eliminar Municipios'],
+
+            // Permisos de Redes
+            ['name' => 'Ver redes', 'slug' => 'reds.view', 'description' => 'Ver redes'],
+            ['name' => 'Gestionar redes', 'slug' => 'reds.management', 'description' => 'Crear, Editar, Eliminar Redes'],
+
+            // Permisos de Reportes
+            ['name' => 'Gestionar reportes', 'slug' => 'reportes', 'description' => 'Generar reportes'],
+            ['name' => 'Exportar reportes', 'slug' => 'exportaciones', 'description' => 'Exportar reportes'],
+            ['name' => 'Generar Oportunidad de Información', 'slug' => 'oportunidad', 'description' => 'Generar Reporte de Oportunidad de Información'],
+            
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['slug' => $permission['slug']], $permission);
+        }
+
+        // Crear roles
+        $superAdmin = Role::firstOrCreate(
+            ['slug' => 'super-admin'],
+            ['name' => 'Super Administrador', 'description' => 'Acceso total sin restricciones']
+        );
+
+        $admin = Role::firstOrCreate(
+            ['slug' => 'admin'],
+            ['name' => 'Administrador', 'description' => 'Gestion copleta de usuarios y formularios']
+        );
+
+        // Asignar permisos a roles
+        $allPermissions = Permission::all()->pluck('id')->toArray();
+        $superAdmin->permissions()->sync($allPermissions);
+        $superAdmin->permissions()->detach([5, 10]);
+        $admin->permissions()->sync($allPermissions);
+        $admin->permissions()->detach([3, 4, 7, 5, 10]);
+
+        // Crear usuario super-admin
+        $superAdminUser = User::firstOrCreate(
+            ['name' => 'Super Admin'],
+            [
+                'password' => bcrypt('superadmin1234'),
+            ]
+        );
+        $superAdminUser->assignRole('super-admin');
+        $superAdminUser->sistemas()->sync([$SDIS->id, $Vigilancia->id, $Hospitales->id]);
+
+        // Crear usuario administrador
+        $adminSDIS = User::firstOrCreate(
+            ['name' => 'Administrador SDIS'],
+            [
+                'password' => bcrypt('admin1234'),
+                'sistema_id' => $SDIS->id
+            ]
+        );
+        // Asignar rol
+        $adminSDIS->assignRole('admin');
+        $adminSDIS->sistemas()->sync([$SDIS->id]);
+        
+        $adminHospitales = User::firstOrCreate(
+            ['name' => 'Administrador Hospitales'],
+            [
+                'password' => bcrypt('admin1234'),
+                'sistema_id' => $Hospitales->id
+            ]
+        );
+        // Asignar rol
+        $adminHospitales->assignRole('admin');
+        $adminHospitales->sistemas()->sync([$Hospitales->id]);
+
+        $adminVigilancia = User::firstOrCreate(
+            ['name' => 'Administrador Vigilancia'],
+            [
+                'password' => bcrypt('admin1234'),
+                'sistema_id' => $Vigilancia->id
+            ]
+        );
+        // Asignar rol
+        $adminVigilancia->assignRole('admin');
+        $adminVigilancia->sistemas()->sync([$Vigilancia->id]);
     }
 }

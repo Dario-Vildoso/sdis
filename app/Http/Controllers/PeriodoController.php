@@ -8,6 +8,8 @@ use App\Models\Gestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Psy\Command\WhereamiCommand;
 
 class PeriodoController extends Controller
 {
@@ -16,10 +18,9 @@ class PeriodoController extends Controller
      */
     public function index()
     {
-        $formularios = Formulario::all();
-        $gestiones = Gestion::all();
-        $periodos = Periodo::all();
-        return view('periodos.index', compact('periodos', 'formularios', 'gestiones'));
+        $formularios = Formulario::all()->where('sistema_id', Auth::user()->sistema_id);
+        $periodos = Periodo::whereIn('formulario_id', $formularios->pluck('id'))->orderByDesc('numero')->get();
+        return view('periodos.index', compact('periodos', 'formularios'));
     }
 
     /**
@@ -38,14 +39,37 @@ class PeriodoController extends Controller
         request()->validate([
             'form_id' => 'required|exists:formularios,id',
             'descripcion' => 'required|string|max:255',
+            'tipo' => 'required|string|max:255',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ]);
 
         $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $semanas = [];
+        for($i = 1; $i <= 53; $i++) {
+            $semana = 'Semana ' . $i;
+            $semanas[] = $semana;
+        }
+        $trimestres = ['Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4'];
+        $semestres = ['Semestre 1', 'Semestre 2'];
+        $desc = [];
+        switch($request->tipo){
+            case '1':
+                $desc = $meses[intval($request->descripcion)-1];
+                break;
+            case '2':
+                $desc = $semanas[intval($request->descripcion)-1];
+                break;
+            case '3':
+                $desc = $trimestres[intval($request->descripcion)-1];
+                break;
+            case '4':
+                $desc = $semestres[intval($request->descripcion)-1];
+                break;
+        }
 
         $periodo = new Periodo();
-        $periodo->descripcion = $meses[intval($request->descripcion)-1];
+        $periodo->descripcion = $desc;
         $periodo->fecha_inicio = $request->fecha_inicio;
         $periodo->fecha_fin = $request->fecha_fin;
         $periodo->formulario_id = $request->form_id;
@@ -82,12 +106,37 @@ class PeriodoController extends Controller
         $periodo = Periodo::findOrFail($id);
         request()->validate([
             'form_id' => 'required|exists:formularios,id',
+            'tipo' => 'required|string|max:255',
             'descripcion' => 'required|string|max:255',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ]);
+         $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $semanas = [];
+        for($i = 1; $i <= 53; $i++) {
+            $semana = 'Semana ' . $i;
+            $semanas[] = $semana;
+        }
+        $trimestres = ['Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4'];
+        $semestres = ['Semestre 1', 'Semestre 2'];
+        $desc = '';
+        switch($request->tipo){
+            case '1':
+                $desc = $meses[intval($request->descripcion)-1];
+                break;
+            case '2':
+                $desc = $semanas[intval($request->descripcion)-1];
+                break;
+            case '3':
+                $desc = $trimestres[intval($request->descripcion)-1];
+                break;
+            case '4':
+                $desc = $semestres[intval($request->descripcion)-1];
+                break;
+        }
         $periodo->formulario_id = $request->form_id;
-        $periodo->descripcion = $request->descripcion;
+        $periodo->descripcion = $desc;
+        $periodo->numero = $request->descripcion;
         $periodo->fecha_inicio = $request->fecha_inicio;
         $periodo->fecha_fin = $request->fecha_fin;
         $periodo->updated_at = Carbon::now();

@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Establecimientos')
 
 @section('content')
 
@@ -41,8 +41,10 @@
                 <th>Municipio</th>
                 <th>Codigo</th>
                 <th>Nivel</th>
-                <th>Estado</th>ç
+                @if (Auth::user()->hasPermissionTo('establecimientos.management'))
+                <th>Estado</th>
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
@@ -54,9 +56,10 @@
                         </div>
                     </td>
                     <td>{{ $establecimiento->descripcion }}</td>
-                    <td>{{ $municipios[$establecimiento->id_mun-1]->nombre }}</td>
+                    <td>{{ $establecimiento->municipio->nombre }}</td>
                     <td>{{ $establecimiento->codigo_est }}</td>
                     <td>{{ $establecimiento->nivel }}º Nivel</td>
+                    @if (Auth::user()->hasPermissionTo('establecimientos.management'))
                     <td>
                         <div class="form-check form-switch">
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $establecimiento->id }}" data-id="{{ $establecimiento->id }}" {{ $establecimiento->estado ? 'checked' : '' }}>
@@ -72,7 +75,7 @@
                                 data-nivel="{{ $establecimiento->nivel }}">
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
-
+                        @if (Auth::user()->hasRole('super-admin'))
                         <form action="{{ route('establecimientos.destroy', $establecimiento) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
@@ -81,7 +84,9 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
+                        @endif
                     </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>
@@ -256,6 +261,7 @@ $(function () {
                                     <option value="1">Nivel 1</option>
                                     <option value="2">Nivel 2</option>
                                     <option value="3">Nivel 3</option>
+                                    <option value="4">Nivel 4</option>
                                 </select>
                             </div>
                         </div>
@@ -304,7 +310,7 @@ $(function () {
                 });
 
                 // Edit establishment: populate and set action
-                $('.edit-est').on('click', function () {
+                $(document).on('click', '.edit-est', function () {
                         var id = $(this).data('id');
                         var descripcion = $(this).data('descripcion');
                         var municipio = $(this).data('municipio');
@@ -320,8 +326,7 @@ $(function () {
                         $('#estNivel').val(nivel);
                         $('#estSubmit').text('Actualizar');
 
-                        var estModal = new bootstrap.Modal(document.getElementById('estModal'));
-                        estModal.show();
+                        $('#estModal').modal('show');
                 });
                 $('#estForm').on('submit', function() {
                     $('#estSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...');

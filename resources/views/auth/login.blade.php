@@ -15,6 +15,7 @@
 
     <form method="POST" action="{{ route('login') }}" class="form-login">
         @csrf
+    <div class="{{ session('login_systems') ? 'd-none' : '' }}">
 
         <div class="mb-3">
             <label class="form-label">Nombre de usuario</label>
@@ -24,7 +25,7 @@
             </div>
             <x-input-error :messages="$errors->get('name')" class="text-danger mt-1" />
         </div>
-
+        
         <div class="mb-3">
             <label class="form-label">Contraseña</label>
             <div class="input-group">
@@ -33,6 +34,7 @@
             </div>
             <x-input-error :messages="$errors->get('password')" class="text-danger mt-1" />
         </div>
+    </div>
 
         @if(session('login_message'))
             <div class="alert alert-info">{{ session('login_message') }}</div>
@@ -60,7 +62,7 @@
         </div>
 
         <button class="btn d-grid w-100" style="background-color: #139b92 !important; color: white;">
-            {{ session('login_systems') ? 'Ingresar al sistema' : 'Continuar' }}
+            {{ session('login_systems') ? 'Ingresar' : 'Continuar' }}
         </button>
     </form>
 

@@ -1,10 +1,10 @@
 @extends('layouts.materio')
 
-@section('title', 'Gestión de Roles')
+@section('title', 'Roles')
 
 @section('content')
 <div class="row justify-content-end">
-
+    @if (Auth::user()->hasPermissionTo('roles.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -18,6 +18,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 
                     <div class="card" style="padding: 20px">
@@ -27,9 +28,7 @@
                                     <tr>
                                         <th class="id-header"></th>
                                         <th>Nombre</th>
-                                        <th>Slug</th>
                                         <th>Descripción</th>
-                                        <th>Permisos</th>
                                         <th>Usuarios</th>
                                         <th class="actions">Acciones</th>
                                     </tr>
@@ -43,13 +42,7 @@
                                                 </div>
                                             </td>
                                             <td class="data">{{ $role->name }}</td>
-                                            <td class="data"><span class="badge bg-label-info">{{ $role->slug }}</span></td>
                                             <td class="data">{{ $role->description ?? 'N/A' }}</td>
-                                            <td class="data">
-                                                <span class="badge bg-label-secondary">
-                                                    {{ $role->permissions->count() }} permisos
-                                                </span>
-                                            </td>
                                             <td class="data">
                                                 <span class="badge bg-label-warning">
                                                     {{ $role->users->count() }} usuarios
@@ -62,12 +55,13 @@
                                                                 <i class="ri ri-eye-line bg-info"></i>
                                                             </a>
                                                         </button>
+                                                        @if (Auth::user()->hasPermissionTo('roles.management'))
                                                         <button type="button" class="btn-icon">
                                                             <a href="{{ route('roles.edit', $role) }}">
                                                                 <i class="ri ri-pencil-line bg-success"></i>
                                                             </a>
                                                         </button>
-
+                                                        @if (Auth::user()->hasRole('super-admin'))
                                                         <form action="{{ route('roles.destroy', $role) }}" method="POST" style="display: inline;">
                                                             @csrf
                                                             @method('DELETE')
@@ -75,6 +69,8 @@
                                                                 <i class="ri ri-delete-bin-line bg-danger"></i> 
                                                             </button>
                                                         </form>
+                                                        @endif
+                                                        @endif
                                                 </div>
                                             </td>
                                         </tr>

@@ -17,7 +17,6 @@ class CheckPermission
         if (!auth()->check()) {
             return redirect('login');
         }
-
         foreach ($permissions as $permission) {
             if ($request->user()->hasPermissionTo($permission)) {
                 return $next($request);

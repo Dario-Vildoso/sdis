@@ -9,6 +9,7 @@ use App\Models\Variable;
 use App\Models\Periodo;
 use App\Models\Dato;
 use App\Models\Establecimiento;
+use App\Models\Excepcion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -41,13 +42,17 @@ class FormularioController extends Controller
     {
         request()->validate([
             'gestion_id' => 'required|exists:gestions,id',
+            'descripcion' => 'string|max:255',
         ]);
         $formulario = new Formulario();
         $formulario->sistema_id = Auth::user()->sistema_id;
         $formulario->gestion_id = $request->gestion_id;
+        $formulario->descripcion = $request->descripcion;
         $formulario->created_at = Carbon::now();
         $formulario->updated_at = Carbon::now();
         $formulario->save();
+        $establecimientos = Establecimiento::all()->where('estado', true)->pluck('id');
+        $formulario->establecimientos()->attach($establecimientos);
         return redirect()->route('formularios.index')->with('success', 'Formulario creado exitosamente.');
     }
     public function menu()
@@ -81,8 +86,14 @@ class FormularioController extends Controller
                 fn($c) => $this->countLeaves($c)
             );
         });
+        $subvariableIds = $formulario->variables
+            ->flatMap->subvariables
+            ->pluck('id')
+            ->unique();
+        $excepciones = Excepcion::whereIn('subvariable_id', $subvariableIds)
+            ->get(['subvariable_id', 'cabecera_id']);
         $datos = Dato::where('periodo_id', $periodo->id)->where('establecimiento_id', $user->alcances()->first()->alcance_id)->get();
-        return view('formularios.periodo', compact('formulario', 'user', 'periodo', 'datos'));
+        return view('formularios.periodo', compact('formulario', 'user', 'periodo', 'datos', 'excepciones'));
     }
 
     public function storeData(Request $request, Formulario $formulario, Periodo $periodo)
@@ -241,8 +252,10 @@ class FormularioController extends Controller
         $formulario = Formulario::findOrFail($id);
         request()->validate([
             'gestion_id' => 'required|exists:gestions,id',
+            'descripcion' => 'string|max:255',
         ]);
         $formulario->gestion_id = $request->gestion_id;
+        $formulario->descripcion = $request->descripcion;
         $formulario->updated_at = Carbon::now();
         $formulario->save();
         return redirect()->route('formularios.index')->with('success', 'Formulario actualizado exitosamente.');

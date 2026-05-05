@@ -23,7 +23,7 @@ class ExportacionController extends Controller
         $scopeData = $this->resolveScope($scope?->tipo, (int) ($scope?->alcance_id));
         $establecimientosScope = $scopeData['establecimientos'];
 
-        $formularios = Formulario::query()->orderBy('id')->get();
+        $formularios = Formulario::query()->where('sistema_id', $user->sistema_id)->orderBy('id')->get();
 
         $redesDisponibles = $establecimientosScope
             ->groupBy('red_id')

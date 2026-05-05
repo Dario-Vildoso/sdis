@@ -58,7 +58,7 @@ function maxDepth($cabeceras) {
         <select class="form-select selectorSubvariable">
             <option value="">Seleccione una subvariable</option>
             
-            @foreach($variable->subvariables as $subvariable)
+            @foreach($variable->subvariables->where('estado', 'activo') as $subvariable)
             <option value="{{ $subvariable->id }}">
                 {{ $subvariable->descripcion }}
             </option>
@@ -113,17 +113,21 @@ foreach ($rows as $i => $nivel) {
         $nivelesVisibles[] = $i;
     }
 }
+$colspanVariable = 0;
+
+foreach ($rows[0] as $cabecera) {
+    $colspanVariable += countLeaves($cabecera);
+}
 @endphp
 <div class="table-responsive table-horizontal" data-variable-id="{{ $variable->id }}" style="display: none;">
-
 
     <table class="table table-sm small table-materio">
 
         <thead>
 
-            @foreach ($variable->subvariables as $subvariable)
+            @foreach ($variable->subvariables->where('estado', 'activo') as $subvariable)
             <tr>
-                <th colspan="{{ countLeaves($rows[0][0]) }}" class="fw-semibold subvariable-cell text-white" data-subvariable-id="{{ $subvariable->id }}" style="display: none;">
+                <th colspan="{{ $colspanVariable }}" class="fw-semibold subvariable-cell text-white" data-subvariable-id="{{ $subvariable->id }}" style="display: none;">
                     {{ $variable->descripcion }}: {{ $subvariable->descripcion }}
                 </th>
             </tr>
@@ -177,12 +181,15 @@ foreach ($rows as $i => $nivel) {
 
         <tbody>
 
-            @foreach($variable->subvariables as $subvariable)
-
+            @foreach($variable->subvariables->where('estado', 'activo') as $subvariable)
                 <tr>
                     {{-- Columnas cabeceras vacías --}}
                     @foreach(end($rows) ?? [] as $cabecera)
-                        <td class="data text-center justify-content-center align-items-center" style="height: 50px;" contenteditable="true" data-cabecera-id="{{ $cabecera->id }}" data-subvariable-id="{{ $subvariable->id }}" style="display: none">
+                        <td class="data text-center justify-content-center align-items-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? '' : '' }}"
+                        style="height: 50px;" 
+                        contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'true' : 'true' }}" 
+                        data-cabecera-id="{{ $cabecera->id }}" data-subvariable-id="{{ $subvariable->id }}" 
+                        style="display: none">
                             @if($datos->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first())
                                 {{ $datos->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first()->valor }}
                             @endif
@@ -190,7 +197,6 @@ foreach ($rows as $i => $nivel) {
                     @endforeach
 
                 </tr>
-
             @endforeach
 
         </tbody>
@@ -205,7 +211,7 @@ foreach ($rows as $i => $nivel) {
 
         <thead>
                 {{-- Subvariables --}}
-                @foreach ($variable->subvariables as $subvariable)
+                @foreach ($variable->subvariables->where('estado', 'activo') as $subvariable)
                 <tr>
                     <th style="display: none;" colspan="{{ count($nivelesVisibles) + 1 }}" class="fw-semibold subvariable-cell text-white" data-subvariable-id="{{ $subvariable->id }}">
                         
@@ -270,10 +276,9 @@ foreach ($rows as $i => $nivel) {
                     @endforeach
 
                     {{-- 🔹 Datos --}}
-                    @foreach($variable->subvariables as $subvariable)
-
-                        <td class="data text-center"
-                            contenteditable="true"
+                    @foreach($variable->subvariables->where('estado', 'activo') as $subvariable)
+                        <td class="data text-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? '' : '' }}"
+                            contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'true' : 'true' }}"
                             data-cabecera-id="{{ $leaf->id }}"
                             data-subvariable-id="{{ $subvariable->id }}">
                             @if($datos->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first())
@@ -442,6 +447,10 @@ foreach ($rows as $i => $nivel) {
     }
     table.table-materio td.data {
         padding: 10px 10px !important;
+    }
+    table.table-materio td.celda-apagada {
+        background-color: black;
+        opacity: 0.2;
     }
 
     .sticky-col {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Red;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class RedController extends Controller
 {
@@ -12,7 +13,8 @@ class RedController extends Controller
      */
     public function index()
     {
-        //
+        $redes = Red::orderBy('nombre', 'asc')->get();
+        return view('redes.index', compact('redes'));
     }
 
     /**
@@ -28,7 +30,19 @@ class RedController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'codigo' => 'nullable|string|max:50|unique:reds',
+        ]);
+
+        $red = new Red();
+        $red->nombre = $request->nombre;
+        $red->codigo = $request->codigo;
+        $red->created_at = Carbon::now();
+        $red->updated_at = Carbon::now();
+        $red->save();
+
+        return redirect()->route('redes.index')->with('success', 'Red creada exitosamente.');
     }
 
     /**
@@ -50,9 +64,21 @@ class RedController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Red $red)
+    public function update(Request $request, $id)
     {
-        //
+        $red = Red::findOrFail($id);
+
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'codigo' => 'nullable|string|max:50|unique:reds,codigo,' . $red->id,
+        ]);
+
+        $red->nombre = $request->nombre;
+        $red->codigo = $request->codigo;
+        $red->updated_at = Carbon::now();
+        $red->save();
+
+        return redirect()->route('redes.index')->with('success', 'Red actualizada exitosamente.');
     }
 
     /**
@@ -60,6 +86,7 @@ class RedController extends Controller
      */
     public function destroy(Red $red)
     {
-        //
+        $red->delete();
+        return redirect()->route('redes.index')->with('success', 'Red eliminada exitosamente.');
     }
 }

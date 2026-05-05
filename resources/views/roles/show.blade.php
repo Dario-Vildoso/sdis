@@ -11,9 +11,11 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">{{ $role->name }}</h5>
                         <div>
+                            @if (Auth::user()->hasPermissionTo('roles.management'))
                             <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-primary">
                                 <i class="ri-edit-line"></i> Editar
                             </a>
+                            @endif
                             <a href="{{ route('roles.index') }}" class="btn btn-sm btn-secondary">
                                 <i class="ri-arrow-left-line"></i> Volver
                             </a>

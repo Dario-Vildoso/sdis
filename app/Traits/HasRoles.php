@@ -76,12 +76,49 @@ trait HasRoles
     public function hasPermissionTo($permission)
     {
         if (is_string($permission)) {
-            $permission = Permission::where('slug', $permission)->first();
-        }
-
-        return $this->roles->flatMap->permissions->contains($permission);
+            $permissionData = Permission::where('slug', $permission)->first();
+        };
+        return $this->roles->flatMap->permissions->contains('id', $permissionData?->id);
     }
 
+    /**
+     * Verificar si el usuario tiene alguno de varios permisos
+     */
+    public function hasAnyPermission($permissions)
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        $permissionIds = Permission::whereIn('slug', $permissions)
+            ->pluck('id');
+
+        return $this->roles
+            ->flatMap->permissions
+            ->pluck('id')
+            ->intersect($permissionIds)
+            ->isNotEmpty();
+    }
+
+    /**
+     * Verificar si el usuario tiene todos los permisos
+     */
+    public function hasAllPermissions($permissions)
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        $permissionIds = Permission::whereIn('slug', $permissions)
+            ->pluck('id');
+
+        $userPermissionIds = $this->roles
+            ->flatMap->permissions
+            ->pluck('id')
+            ->unique();
+
+        return $permissionIds->diff($userPermissionIds)->isEmpty();
+    }
     /**
      * Obtener todos los permisos del usuario a través de sus roles
      */

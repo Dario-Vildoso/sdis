@@ -27,7 +27,7 @@
     });
 </script>
 @endif
-
+@if (Auth::user()->hasPermissionTo('periodos.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -40,6 +40,7 @@
             </div>
         </div>
     </div>
+@endif
 <div class="card" style="padding: 20px">
     <div class="table-responsive">
         <table id="dataTable" class="table table-sm table-bordered table-stripped small table-materio">
@@ -50,8 +51,10 @@
                 <th>Descripcion</th>
                 <th>Fecha de Inicio</th>
                 <th>Fecha de Fin</th>
-                <th>Estado</th>
+                @if (Auth::user()->hasPermissionTo('periodos.management'))
+                <th>Activar</th>
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
@@ -62,10 +65,11 @@
                             <strong>{{ $periodo->id }}</strong>
                         </div>
                     </td>
-                    <td class="data">{{ $formularios->where('id', $periodo->formulario_id)->first()->sistema->nombre ?? 'Sin formulario' }} - {{ $gestiones->where('id', $formularios->where('id', $periodo->formulario_id)->first()->gestion_id ?? 0)->first()->nombre ?? 'Sin gestión' }}</td>
+                    <td class="data">{{ $periodo->formulario->sistema->nombre ?? 'Sin sistema' }} - {{ $periodo->formulario->gestion->nombre ?? 'Sin gestión' }}: {{ $periodo->formulario->descripcion ?? 'Sin descripción' }}</td>
                     <td class="data">{{ $periodo->descripcion }}</td>
                     <td class="data">{{ $periodo->fecha_inicio }}</td>
                     <td class="data">{{ $periodo->fecha_fin }}</td>
+                    @if (Auth::user()->hasPermissionTo('periodos.management'))
                     <td class="data">
                         <div class="form-check form-switch">
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $periodo->id }}" data-id="{{ $periodo->id }}" {{ $periodo->estado ? 'checked' : '' }}>
@@ -77,6 +81,7 @@
                                 data-id="{{ $periodo->id }}"
                                 data-formulario="{{ $periodo->formulario_id }}"
                                 data-descripcion="{{ $periodo->descripcion }}"
+                                data-numero="{{ $periodo->numero }}"
                                 data-fecha-inicio="{{ $periodo->fecha_inicio }}"
                                 data-fecha-fin="{{ $periodo->fecha_fin }}"
                                 data-estado="{{ $periodo->estado }}">
@@ -92,6 +97,7 @@
                             </button>
                         </form>
                     </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>
@@ -156,6 +162,7 @@ $(function () {
     var table = $("#dataTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "order": [],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -202,7 +209,7 @@ $(function () {
         // Opciones recomendadas para mejor experiencia
         "pagingType": "full_numbers",
         "scrollX": true,                    // Útil si tienes muchas columnas
-        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
+        // "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
     });
 
     // Mover los botones a la izquierda (opcional)
@@ -228,32 +235,50 @@ $(function () {
                         {{-- Formulario --}}
                         <div class="col-md-12 mb-3">
                             <label for="periodoForm" class="form-label">Formulario</label>
-                            <select class="form-select" name="form_id" id="periodoForm">
-                                <option value="" disabled>Seleccione un formulario</option>
-                                @foreach($formularios as $formulario)
-                                    <option value="{{ $formulario->id }}">
-                                        {{ $formulario->nombre }} - {{ $gestiones->where('id', $formulario->gestion_id)->first()->nombre ?? 'Sin gestión' }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="input-group">
+                                <span class="input-group-text bg-warning"><i class="ri ri-survey-line"></i></span>
+                                <select class="form-select" required name="form_id" id="periodoForm">
+                                    <option value="" disabled>Seleccione un formulario</option>
+                                    @foreach($formularios as $formulario)
+                                        <option value="{{ $formulario->id }}">
+                                            {{ $formulario->sistema->nombre }} - {{ $formulario->gestion->nombre }}: {{ $formulario->descripcion }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                         {{-- Descripción --}}
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label for="periodoDescripcion" class="form-label">Tipo</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-success"><i class="ri ri-time-line"></i></span>
+                                <select class="form-select" name="tipo" id="periodoTipo" onchange="setPeriodoSelector()">
+                                    <option value="1">Mensual</option>
+                                    <option value="2">Semanal</option>
+                                    <option value="3">Trimestral</option>
+                                    <option value="4">Semestral</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8 mb-3">
                             <label for="periodoDescripcion" class="form-label">Periodo</label>
-                            <select class="form-select" name="descripcion" id="periodoDescriocion" required>
-                                <option value="1">Enero</option>
-                                <option value="2">Febrero</option>
-                                <option value="3">Marzo</option>
-                                <option value="4">Abril</option>
-                                <option value="5">Mayo</option>
-                                <option value="6">Junio</option>
-                                <option value="7">Julio</option>
-                                <option value="8">Agosto</option>
-                                <option value="9">Septiembre</option>
-                                <option value="10">Octubre</option>
-                                <option value="11">Noviembre</option>
-                                <option value="12">Diciembre</option>
-                            </select>
+                            <div class="input-group">
+                                <span class="input-group-text bg-info"><i class="ri ri-calendar-line"></i></span>
+                                <select class="form-select" name="descripcion" id="periodoDescripcion" required>
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
                         </div>
                         {{-- Fecha de Inicio --}}
                         <div class="col-md-6 mb-3">
@@ -286,6 +311,33 @@ $(function () {
         </div>
     </div>
 </div>
+<script>
+    let meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    let semanas = []
+    for(let i = 1; i <= 53; i++) {
+        semana = 'Semana ' + i
+        semanas.push(semana)
+    }
+    let trimestres = ['Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4']
+    let semestres = ['Semestre 1', 'Semestre 2']
+    function setPeriodoSelector() {
+        var tipo = $('#periodoTipo').val()
+        switch(tipo){
+            case '1':
+                $('#periodoDescripcion').html(meses.map(mes => `<option value="${meses.indexOf(mes) + 1}">${mes}</option>`).join(''))
+                break
+            case '2':
+                $('#periodoDescripcion').html(semanas.map(semana => `<option value="${semanas.indexOf(semana) + 1}">${semana}</option>`).join(''))
+                break
+            case '3':
+                $('#periodoDescripcion').html(trimestres.map(trimestre => `<option value="${trimestres.indexOf(trimestre) + 1}">${trimestre}</option>`).join(''))
+                break
+            case '4':
+                $('#periodoDescripcion').html(semestres.map(semestre => `<option value="${semestres.indexOf(semestre) + 1}">${semestre}</option>`).join(''))
+                break
+        }
+    }
+</script>
 
 <script>
         $(function () {
@@ -298,6 +350,8 @@ $(function () {
                         $('#dataForm').attr('action', "{{ route('periodos.store') }}");
                         $('#formMethod').val(''); // Limpia el método para creación
                         $('#periodoForm').val('');
+                        $('#periodoTipo').val('1');
+                        setPeriodoSelector()
                         $('#periodoDescripcion').val('');
                         $('#periodoFechaInicio').val('{{ now()->format('Y-m-d\TH:i') }}');
                         $('#periodoFechaFin').val('{{ now()->format('Y-m-d\TH:i') }}');
@@ -309,13 +363,24 @@ $(function () {
                         var id = $(this).data('id');
                         var formularioId = $(this).data('formulario');
                         var descripcion = $(this).data('descripcion');
+                        var numero = $(this).data('numero');
+                        if (meses.includes(descripcion)) {
+                            $('#periodoTipo').val('1');
+                        } else if (semanas.includes(descripcion)) {
+                            $('#periodoTipo').val('2');
+                        } else if (trimestres.includes(descripcion)) {
+                            $('#periodoTipo').val('3');
+                        } else if (semestres.includes(descripcion)) {
+                            $('#periodoTipo').val('4');
+                        }
+                        setPeriodoSelector()
                         var fechaInicio = $(this).data('fecha-inicio');
                         var fechaFin = $(this).data('fecha-fin');
                         $('#ModalLabel').text('Editar formulario');
                         $('#dataForm').attr('action', baseUrl + '/' + id);
                         $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
                         $('#periodoForm').val(formularioId);
-                        $('#periodoDescripcion').val(descripcion);
+                        $('#periodoDescripcion').val(numero);
                         $('#periodoFechaInicio').val(fechaInicio);
                         $('#periodoFechaFin').val(fechaFin);
                         $('#dataSubmit').text('Actualizar');

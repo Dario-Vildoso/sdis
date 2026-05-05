@@ -209,7 +209,8 @@ class ReporteController extends Controller
 
     public function oportunidad(Request $request)
     {
-                $formularios = Formulario::query()->orderBy('id')->get();
+        $user = auth()->user();
+        $formularios = Formulario::query()->where('sistema_id', $user->sistema_id)->orderBy('id')->get();
 
         $formulario = null;
         $periodos = collect();
@@ -424,16 +425,27 @@ class ReporteController extends Controller
             });
         }
 
-        $establecimientosConDato = Dato::query()
+        $datosPorEstablecimiento = Dato::query()
             ->whereIn('periodo_id', $periodosEnRango)
             ->whereIn('establecimiento_id', $establecimientos->pluck('id'))
-            ->distinct()
-            ->pluck('establecimiento_id')
-            ->map(fn ($id) => (int) $id)
-            ->flip();
+            ->get()
+            ->groupBy('establecimiento_id');
 
-        return $establecimientos->map(function ($establecimiento) use ($establecimientosConDato) {
-            $establecimiento->produccion = $establecimientosConDato->has((int) $establecimiento->id) ? '0' : '';
+        return $establecimientos->map(function ($establecimiento) use ($datosPorEstablecimiento) {
+            $datosEstablecimiento = $datosPorEstablecimiento->get((int) $establecimiento->id, collect());
+
+            if ($datosEstablecimiento->isEmpty()) {
+                $establecimiento->produccion = '';
+                $establecimiento->fecha = '';
+                return $establecimiento;
+            }
+
+            $tieneDatosConProduccion = $datosEstablecimiento->contains(fn ($dato) => (float) $dato->valor !== 0.0);
+            $establecimiento->produccion = $tieneDatosConProduccion ? 'con produccion' : 'sin produccion';
+            $establecimiento->fecha = $datosEstablecimiento
+                ->pluck('fecha')
+                ->filter()
+                ->max() ?? '';
 
             return $establecimiento;
         });

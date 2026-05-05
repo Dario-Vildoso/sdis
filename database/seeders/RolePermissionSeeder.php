@@ -20,42 +20,49 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             // Permisos de Usuarios
             ['name' => 'Ver usuarios', 'slug' => 'users.view', 'description' => 'Ver lista de usuarios'],
-            ['name' => 'Crear usuarios', 'slug' => 'users.create', 'description' => 'Crear nuevos usuarios'],
-            ['name' => 'Editar usuarios', 'slug' => 'users.edit', 'description' => 'Editar usuarios existentes'],
-            ['name' => 'Eliminar usuarios', 'slug' => 'users.delete', 'description' => 'Eliminar usuarios'],
+            ['name' => 'Gestionar usuarios', 'slug' => 'users.management', 'description' => 'Crear, Editar, Eliminar, Activar y Desactivar usuarios'],
+            ['name' => 'Gestionar sistemas de usuario', 'slug' => 'users.sistemas', 'description' => 'Asignar y Desasignar sistemas de usuario'],
+            ['name' => 'Asignar administradores', 'slug' => 'users.admins', 'description' => 'Asignar y Desasignar administradores'],
+            ['name' => 'Alcances de Operadores', 'slug' => 'users.operators', 'description' => 'Permite que el usuario tenga alcances de operador (Establecimiento, Municipio o Red)'],
 
             // Permisos de Roles
             ['name' => 'Ver roles', 'slug' => 'roles.view', 'description' => 'Ver lista de roles'],
-            ['name' => 'Crear roles', 'slug' => 'roles.create', 'description' => 'Crear nuevos roles'],
-            ['name' => 'Editar roles', 'slug' => 'roles.edit', 'description' => 'Editar roles existentes'],
-            ['name' => 'Eliminar roles', 'slug' => 'roles.delete', 'description' => 'Eliminar roles'],
+            ['name' => 'Gestionar roles', 'slug' => 'roles.management', 'description' => 'Crear, Editar, Eliminar, Asignar y Desasignar roles'],
 
             // Permisos de Formularios
             ['name' => 'Ver formularios', 'slug' => 'formularios.view', 'description' => 'Ver formularios'],
-            ['name' => 'Crear formularios', 'slug' => 'formularios.create', 'description' => 'Crear nuevos formularios'],
-            ['name' => 'Editar formularios', 'slug' => 'formularios.edit', 'description' => 'Editar formularios'],
-            ['name' => 'Eliminar formularios', 'slug' => 'formularios.delete', 'description' => 'Eliminar formularios'],
+            ['name' => 'Gestionar formularios', 'slug' => 'formularios.management', 'description' => 'Crear, Editar, Eliminar Formularios'],
+            ['name' => 'Enviar fomrularios', 'slug' => 'formularios.submit', 'description' => 'Subir formularios'],
+
+            // Permisos de Periodos
+            ['name' => 'Ver periodos', 'slug' => 'periodos.view', 'description' => 'Ver periodos'],
+            ['name' => 'Gestionar periodos', 'slug' => 'periodos.management', 'description' => 'Crear, Editar, Eliminar Periodos'],
 
             // Permisos de Gestiones
             ['name' => 'Ver gestiones', 'slug' => 'gestiones.view', 'description' => 'Ver gestiones'],
-            ['name' => 'Crear gestiones', 'slug' => 'gestiones.create', 'description' => 'Crear nuevas gestiones'],
-            ['name' => 'Editar gestiones', 'slug' => 'gestiones.edit', 'description' => 'Editar gestiones'],
-            ['name' => 'Eliminar gestiones', 'slug' => 'gestiones.delete', 'description' => 'Eliminar gestiones'],
+            ['name' => 'Gestionar gestiones', 'slug' => 'gestiones.management', 'description' => 'Crear, Editar, Eliminar Gestiones'],
 
             // Permisos de Variables
             ['name' => 'Ver variables', 'slug' => 'variables.view', 'description' => 'Ver variables'],
-            ['name' => 'Crear variables', 'slug' => 'variables.create', 'description' => 'Crear nuevas variables'],
-            ['name' => 'Editar variables', 'slug' => 'variables.edit', 'description' => 'Editar variables'],
-            ['name' => 'Eliminar variables', 'slug' => 'variables.delete', 'description' => 'Eliminar variables'],
+            ['name' => 'Gestionar variables', 'slug' => 'variables.management', 'description' => 'Crear, Editar, Eliminar Variables'],
 
-            // Permisos de Datos
-            ['name' => 'Ver datos', 'slug' => 'datos.view', 'description' => 'Ver datos'],
-            ['name' => 'Crear datos', 'slug' => 'datos.create', 'description' => 'Crear nuevos datos'],
-            ['name' => 'Editar datos', 'slug' => 'datos.edit', 'description' => 'Editar datos'],
-            ['name' => 'Eliminar datos', 'slug' => 'datos.delete', 'description' => 'Eliminar datos'],
+            // Permisos de Establecimientos
+            ['name' => 'Ver establecimientos', 'slug' => 'establecimientos.view', 'description' => 'Ver establecimientos'],
+            ['name' => 'Gestionar establecimientos', 'slug' => 'establecimientos.management', 'description' => 'Crear, Editar, Eliminar Establecimientos'],
 
-            // Permisos generales
-            ['name' => 'Acceso total', 'slug' => 'admin', 'description' => 'Acceso total al sistema'],
+            // Permisos de Municipios
+            ['name' => 'Ver municipios', 'slug' => 'municipios.view', 'description' => 'Ver municipios'],
+            ['name' => 'Gestionar municipios', 'slug' => 'municipios.management', 'description' => 'Crear, Editar, Eliminar Municipios'],
+
+            // Permisos de Redes
+            ['name' => 'Ver redes', 'slug' => 'reds.view', 'description' => 'Ver redes'],
+            ['name' => 'Gestionar redes', 'slug' => 'reds.management', 'description' => 'Crear, Editar, Eliminar Redes'],
+
+            // Permisos de Reportes
+            ['name' => 'Gestionar reportes', 'slug' => 'reportes', 'description' => 'Generar reportes'],
+            ['name' => 'Exportar reportes', 'slug' => 'exportaciones', 'description' => 'Exportar reportes'],
+            ['name' => 'Generar Oportunidad de Información', 'slug' => 'oportunidad', 'description' => 'Generar Reporte de Oportunidad de Información'],
+            
         ];
 
         foreach ($permissions as $permission) {

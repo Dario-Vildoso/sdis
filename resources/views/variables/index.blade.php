@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Variables')
 
 @section('content')
 
@@ -16,7 +16,7 @@
     </script>
 @endif
 <div class="row justify-content-end">
-
+    @if (Auth::user()->hasPermissionTo('variables.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -29,6 +29,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 <div class="card" style="padding: 20px;">
@@ -41,7 +42,9 @@
                 <th>Descripcion</th> 
                 <th>Subvariables</th>
                 <th>Cabeceras</th>
+                @if (Auth::user()->hasPermissionTo('variables.management'))
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody class="table-border-bottom-0">
@@ -116,6 +119,7 @@
                             </div>
                         </div>
                     </td>
+                    @if (Auth::user()->hasPermissionTo('variables.management'))
                     <td width="125px">
                         <a href="{{ route('variables.tabla', $variable) }}" 
                            class="btn-icon" 
@@ -130,7 +134,8 @@
                                 onclick="event.stopPropagation();">
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
-
+                        @if (Auth::user()->hasRole('super-admin'))
+                        
                         <form action="{{ route('variables.destroy', $variable) }}" method="POST" class="d-inline" onclick="event.stopPropagation();">
                             @csrf
                             @method('DELETE')
@@ -139,7 +144,9 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
+                        @endif
                     </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>

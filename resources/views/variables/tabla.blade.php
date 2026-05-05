@@ -236,9 +236,13 @@ $rows = $buildRows($variable->cabeceras);
                                 </div>
                             </td>
                             {{-- Columna Subvariable --}}
-                            <td class="fw-semibold data subvariable-nombre" contenteditable="true" title="Editar nombre">
-                                {{ $subvariable->descripcion }}
-                                <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" data-id="{{ $subvariable->id }}" {{ (isset($subvariable->estado) && $subvariable->estado !== 'activo') ? '' : 'checked' }}>
+                            <td class="fw-semibold data subvariable-nombre" title="Editar nombre">
+                                <div class="d-flex">
+                                    <div class="subvariable-text" contenteditable="true">{{ $subvariable->descripcion }}</div>
+                                    <div class="subvariable-checkbox-wrap">
+                                        <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" data-id="{{ $subvariable->id }}" {{ (isset($subvariable->estado) && $subvariable->estado !== 'activo') ? '' : 'checked' }}>
+                                    </div>
+                                </div>
                             </td>
         
                             {{-- Columnas cabeceras (solo lectura) --}}
@@ -513,7 +517,14 @@ $rows = $buildRows($variable->cabeceras);
                             onmouseover="this.style.background='linear-gradient(90deg, #e44810, #830e01)'; this.style.width='50px'; this.style.transition='all 0.2s ease'" 
                             onmouseout="this.style.background='linear-gradient(90deg, #c63805, #830e01)'; this.style.width='40px'; this.style.transition='all 0.2s ease'">`;
             filaHtml += '<i class="fs-5 ri ri-delete-bin-fill"></i></div></td>';
-            filaHtml += '<td class="fw-semibold data subvariable-nombre" contenteditable="true" title="Editar nombre">Nueva subvariable <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" checked></td>';
+            filaHtml += '<td class="fw-semibold data subvariable-nombre" title="Editar nombre">';
+            filaHtml += `<div class="d-flex">
+                                    <span class="subvariable-text" contenteditable="true" data-placeholder="Nueva subvariable"></span>
+                                    <div class="subvariable-checkbox-wrap">
+                                        <input type="checkbox" title="Ocultar" class="form-check-input estado-toggle ri ri-eye-fill" data-id="{{ $subvariable->id }}" {{ (isset($subvariable->estado) && $subvariable->estado !== 'activo') ? '' : 'checked' }}>
+                                    </div>
+                        </div>`;
+            filaHtml += '</td>';
             
             for (let i = 0; i < numCols; i++) {
                 filaHtml += '<td class="data celda-dato"></td>';
@@ -831,6 +842,8 @@ $rows = $buildRows($variable->cabeceras);
         // Guardar cambios
         $('#btnGuardarCambios').on('click', function(e) {
             e.preventDefault();
+            const btn = $(this);
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...');
             const cambios = {
                 variable: {
                     descripcion: $('#nombreVariable').text().trim()
@@ -847,7 +860,7 @@ $rows = $buildRows($variable->cabeceras);
             $('#tablaVariable tbody tr').each(function() {
                 const fila = $(this);
                 const subvarId = fila.data('subvariable-id');
-                const nombre = fila.find('.subvariable-nombre').text().trim();
+                const nombre = fila.find('.subvariable-text').text().trim();
                 const estado = fila.find('.estado-toggle').is(':checked') ? 'activo' : 'inactivo';
                 
                 if (nombre) {
@@ -919,6 +932,7 @@ $rows = $buildRows($variable->cabeceras);
                     } else {
                         alert(response.message || 'Error al guardar');
                     }
+                    btn.prop('disabled', false).html('<i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>');
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
@@ -927,6 +941,7 @@ $rows = $buildRows($variable->cabeceras);
                         msg = xhr.responseJSON.message;
                     }
                     alert(msg);
+                    btn.prop('disabled', false).html('<i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>');
                 }
             });
         });
@@ -940,6 +955,24 @@ $rows = $buildRows($variable->cabeceras);
     }
     .tabla-editable tbody td.subvariable-nombre {
         background-color: #f5f5f5;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .tabla-editable tbody .subvariable-text {
+        flex: 1;
+        min-width: 0;
+        outline: none;
+    }
+    .tabla-editable tbody .subvariable-text:empty:before {
+        content: attr(data-placeholder);
+        color: #6c757d;
+        pointer-events: none;
+    }
+    .tabla-editable tbody .subvariable-checkbox-wrap {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
     }
     .tabla-editable thead th.variable-header {
         background-color: #086375 !important;

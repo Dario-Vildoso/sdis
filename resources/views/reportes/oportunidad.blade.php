@@ -1,11 +1,11 @@
 @extends('layouts.materio')
 
-@section('title', 'Oportunidad de la información')
+@section('title', 'Oportunidad de la informaci贸n')
 
 @section('content')
 <div class="card">
     <div class="card-body">
-        <h4 class="card-title mb-3">Oportunidad de la información</h4>
+        <h4 class="card-title mb-3">Oportunidad de la informaci贸n</h4>
 
         @if($errors->any())
             <div class="alert alert-danger">
@@ -25,7 +25,7 @@
                         <option value="">Seleccione...</option>
                         @foreach($formularios as $item)
                             <option value="{{ $item->id }}" {{ (int) request('formulario_id') === $item->id ? 'selected' : '' }}>
-                                {{ $item->nombre }}
+                                {{ $item->sistema->nombre }} - {{ $item->gestion->nombre }}: {{ $item->descripcion }}
                             </option>
                         @endforeach
                     </select>
@@ -70,7 +70,8 @@
                         <th>Red</th>
                         <th>Municipio</th>
                         <th>Establecimiento</th>
-                        <th>Producción</th>
+                        <th>Fecha</th>
+                        <th>ProducciOn</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -79,12 +80,13 @@
                             <td>{{ $fila->red_nombre }}</td>
                             <td>{{ $fila->municipio_nombre }}</td>
                             <td>{{ $fila->establecimiento_nombre }}</td>
+                            <td>{{ $fila->fecha }}</td>
                             <td>{{ $fila->produccion }}</td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="4" class="text-center text-muted">
-                                Selecciona formulario y periodo para visualizar la oportunidad de la información.
+                                Selecciona formulario y periodo para visualizar la oportunidad de la informaciOn.
                             </td>
                         </tr>
                     @endforelse

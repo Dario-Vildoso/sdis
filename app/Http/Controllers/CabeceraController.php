@@ -84,8 +84,9 @@ class CabeceraController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Cabecera $cabecera)
+    public function destroy($id)
     {
+        $cabecera = Cabecera::findOrFail($id);
         $cabecera->delete();
         return redirect()->route('cabeceras.index')->with('success', 'Cabecera eliminada exitosamente.');
     }

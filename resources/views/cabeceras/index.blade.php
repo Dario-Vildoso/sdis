@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Cabeceras')
 
 @section('content')
 
@@ -17,7 +17,7 @@
     </script>
 @endif
 <div class="row justify-content-end">
-
+@if (Auth::user()->hasPermissionTo('variables.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -30,6 +30,7 @@
             </div>
         </div>
     </div>
+@endif
 </div>
 <div class="card" style="padding: 20px;">
     <div class="table-responsive">
@@ -40,7 +41,9 @@
                 <th>Descripción</th> 
                 <th>Variables</th>
                 <th>Cabecera Superior</th>
+                @if (Auth::user()->hasPermissionTo('variables.management'))
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
@@ -86,9 +89,10 @@
                         </td>
                         <td class="data">
                             {{ $cabeceraPadre ? $cabeceraPadre->descripcion : 'Sin Cabecera Asignada' }}
-                            
+                        @if (Auth::user()->hasPermissionTo('variables.management'))
                         <td>
                             <button type="button"
+                            
                                     class="btn-icon edit-data"
                                     data-id="{{ $cabecera->id }}"
                                     data-descripcion="{{ $cabecera->descripcion }}"
@@ -107,6 +111,7 @@
                                 </button>
                             </form>
                         </td>
+                        @endif
                     </tr>
                 @endforeach
             @endforeach

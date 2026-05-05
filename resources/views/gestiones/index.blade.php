@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Gestiones')
 
 @section('content')
 
@@ -16,7 +16,7 @@
     </script>
 @endif
 <div class="row justify-content-end">
-
+@if (Auth::user()->hasPermissionTo('gestiones.management'))
     <div class="col-md-4 mb-4">
         <div class="card card-action">
             <div class="card-body">
@@ -29,6 +29,7 @@
             </div>
         </div>
     </div>
+@endif
 </div>
 <div class="card" style="padding: 20px">
     <div class="table-responsive">
@@ -37,7 +38,9 @@
             <tr>
                 <th class="id-header"></th>
                 <th>Año</th>
+                @if (Auth::user()->hasPermissionTo('gestiones.management'))
                 <th class="actions">Acciones</th>
+                @endif
             </tr>
             </thead>
             <tbody>
@@ -49,6 +52,7 @@
                         </div>
                     </td>
                     <td class="data">{{ $gestion->nombre }}</td>
+                    @if (Auth::user()->hasPermissionTo('gestiones.management'))
                     <td>
                         <button type="button"
                                 class="btn-icon edit-data"
@@ -56,7 +60,7 @@
                                 data-nombre="{{ $gestion->nombre }}">
                             <i class="ri ri-pencil-line fs-4 bg-success"></i>
                         </button>
-
+                        @if (Auth::user()->hasRole('super-admin'))
                         <form action="{{ route('gestiones.destroy', $gestion) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
@@ -65,7 +69,9 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
+                        @endif
                     </td>
+                    @endif
                 </tr>
             @endforeach
             </tbody>

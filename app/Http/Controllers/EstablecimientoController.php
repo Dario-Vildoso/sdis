@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Establecimiento;
 use App\Models\Municipio;
+use App\Models\Formulario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -34,20 +35,21 @@ class EstablecimientoController extends Controller
     {
         request()->validate([
             'descripcion' => 'required|string|max:255',
+            'id_mun' => 'required|integer|exists:municipios,id',
             'codigo_est' => 'required|string|max:50|unique:establecimientos',
-            'gestion' => 'required|string|max:50',
+            'nivel' => 'required|integer|min:1|max:4',
         ]);
         $municipio = Municipio::find($request->id_mun);
         $establecimiento = new Establecimiento();
         $establecimiento->descripcion = $request->descripcion;
         $establecimiento->id_mun = $municipio->id;
         $establecimiento->codigo_est = $request->codigo_est;
-        $establecimiento->gestion = $request->gestion;
         $establecimiento->nivel = $request->nivel;
         $establecimiento->estado = true; // Activo por defecto
         $establecimiento->created_at = Carbon::now();
         $establecimiento->updated_at = Carbon::now();
         $establecimiento->save();
+        $establecimiento->formularios()->attach(Formulario::all()->pluck('id'));
         return redirect()->route('establecimientos.index')->with('success', 'Establecimiento creado exitosamente.');
     }
 
@@ -84,13 +86,11 @@ class EstablecimientoController extends Controller
             'descripcion' => 'required|string|max:255',
             'id_mun' => 'required|integer|exists:municipios,id',
             'codigo_est' => 'required|string|max:50|unique:establecimientos,codigo_est,'.$establecimiento->id,
-            'gestion' => 'required|string|max:50',
             'nivel' => 'required|integer|min:1|max:3',
         ]);
         $establecimiento->descripcion = $request->descripcion;
         $establecimiento->id_mun = $request->id_mun;
         $establecimiento->codigo_est = $request->codigo_est;
-        $establecimiento->gestion = $request->gestion;
         $establecimiento->nivel = $request->nivel;
         $establecimiento->updated_at = Carbon::now();
         $establecimiento->save();
