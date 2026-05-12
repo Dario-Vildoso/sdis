@@ -244,6 +244,10 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         $user = User::findOrFail($id);
+        $alcance = Alcance::where('usuario_id', $user->id)->first();
+        if ($alcance) {
+            $alcance->delete();
+        }
         $user->delete();
         return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
     }

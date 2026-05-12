@@ -17,6 +17,9 @@
     @endphp
 
     <h2 class="text-center">Reporte - {{ $formulario->nombre }}</h2>
+    <div>
+        <strong>Formulario:</strong> {{ $formulario->descripcion }}
+    </div>
     <div class="row">
         @if($redes->isNotEmpty())
             <div class="col-md-4">
@@ -41,7 +44,7 @@
             <strong>Gestión:</strong> {{ $gestionNombre ?? 'Sin gestión' }}
         </div>
         <div class="col-md-4">
-            <strong>Periodo:</strong> {{ $periodoRango }}
+            <strong>Periodo:</strong> {{ $periodoRango }} мне не удалось найти описание для этого периода
         </div>
     </div>
 
@@ -134,6 +137,26 @@
                         <td>{{ $subData['totales']->sum() }}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td><strong>Total</strong></td>
+                    @foreach($row['cabeceras_hoja'] as $cabecera)
+                        @php
+                            $sum = 0;
+                            foreach($row['subvariables'] as $subData) {
+                                $sum += $subData['totales']->get($cabecera->id, 0);
+                            }
+                        @endphp
+                        <td><strong>{{ $sum }}</strong></td>
+                    @endforeach
+                    @php
+                        $totalSum = 0;
+                        foreach($row['subvariables'] as $subData) {
+                            $totalSum += $subData['totales']->sum();
+                        }
+                    @endphp
+                    <td><strong>{{ $totalSum }}</strong></td>
+                </tr>
+                <tr></tr>
             </tbody>
         </table>
     @endforeach

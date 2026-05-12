@@ -15,10 +15,12 @@
 
         <!-- jQuery --> 
     <script src="{{url('plugins/jquery/jquery.min.js')}}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- alertas-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- datatables-->
     <link rel="icon" href="{{ asset('sedes.jpg') }}" type="image/jpg">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{url('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
     <link rel="stylesheet" href="{{url('plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
     <link rel="stylesheet" href="{{url('plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
@@ -283,6 +285,27 @@
             transition: all 0.3s ease;
         }
 
+        .select2-container .select2-selection {
+            border-radius: 1.5rem;
+            border: none;
+            min-height: 46px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.15);
+            background: #fff;
+        }
+
+        .select2-container .select2-selection__rendered {
+            padding: 0.55rem 0.75rem;
+        }
+
+        .select2-container .select2-selection__arrow {
+            height: 100%;
+        }
+
+        .select2-container .select2-results__option--highlighted {
+            background-color: #139b92;
+            color: white;
+        }
+
         form.reports select,
         form.reports input {
             border: none;
@@ -370,8 +393,6 @@
 <script src="{{ asset('assets/js/main.js') }}"></script>
 <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<!-- JQuery -->
-<script src="{{url('plugins/jquery/jquery.min.js')}}"></script>
 <script src="{{url('plugins/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 <!-- datatable -->
 <script src="{{url('plugins/datatables/jquery.dataTables.min.js')}}"></script>

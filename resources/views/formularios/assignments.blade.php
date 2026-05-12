@@ -116,10 +116,13 @@ $rows = $buildRows($variable->cabeceras);
                         foreach ($rows[$i] ?? [] as $cabecera) {
                             $descs[] = $cabecera->descripcion;
                         }
+                    $longNames = count(array_filter($descs, function($desc) {
+                        return strlen($desc) <= 5;
+                    })) === 0;
                     $uniqueDescs = array_unique($descs);
                     $vallength = count($uniqueDescs);
                 @endphp
-                @if ($vallength < $rowlenght)
+                @if ($vallength < $rowlenght && $longNames)
                 <th rowspan="{{ $niveles - $i }}"
                     class="text-center variable-cell"
                     style="border-radius: 0 0 0 0; padding: 8px 10px; border-top: 1px solid white;"
@@ -141,7 +144,7 @@ $rows = $buildRows($variable->cabeceras);
                             $lightness = 34 - ($i * 2);
                         @endphp
                         <!-- hsl(213, 30%, 32%) -->
-                        @if($cabecera->hijos->isEmpty() && $vallength < $rowlenght)
+                        @if($cabecera->hijos->isEmpty() && $vallength < $rowlenght && $longNames)
                         <th rowspan="{{ $niveles - $i }}"
                         class="text-center"
                         style="background: hsl({{ $hue }}, {{ $saturation }}%, {{ $lightness }}%) !important;"

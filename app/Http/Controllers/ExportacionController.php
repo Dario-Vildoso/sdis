@@ -46,6 +46,7 @@ class ExportacionController extends Controller
             ->map(fn ($establecimiento) => [
                 'id' => (int) $establecimiento->id,
                 'nombre' => $establecimiento->descripcion,
+                'nivel' => (int) $establecimiento->nivel,
                 'municipio_id' => (int) $establecimiento->id_mun,
                 'red_id' => (int) $establecimiento->red_id,
             ])
@@ -166,16 +167,11 @@ class ExportacionController extends Controller
 
         $gestionNombre = optional(Gestion::find($formulario->gestion_id))->nombre;
 
-        $nombresElementos = match ($tipoSeleccion) {
-            'red' => $establecimientosSeleccionados->pluck('red_nombre')->unique()->map(fn ($nombre) => str($nombre)->slug('_'))->join('_'),
-            'municipio' => $establecimientosSeleccionados->pluck('municipio_nombre')->unique()->map(fn ($nombre) => str($nombre)->slug('_'))->join('_'),
-            default => $establecimientosSeleccionados->pluck('descripcion')->map(fn ($nombre) => str($nombre)->slug('_'))->join('_'),
-        };
 
         $periodDesdeDescripcion = $periodos->firstWhere('id', $periodoDesde)?->descripcion ?? 'desde';
         $periodHastaDescripcion = $periodos->firstWhere('id', $periodoHasta)?->descripcion ?? 'hasta';
 
-        $filename = strtoupper(str($formulario->nombre)->slug('_') . '_' . $formulario->gestion->nombre . '_' . $nombresElementos . '_' . $periodDesdeDescripcion . '-' . $periodHastaDescripcion) . '.xls';
+        $filename = strtoupper(str($formulario->sistema->nombre) . '-' . $formulario->gestion->nombre . '_' . $periodDesdeDescripcion . '-' . $periodHastaDescripcion) . '.xls';
 
         return response()->streamDownload(function () use ($rows, $formulario, $periodos, $periodoDesde, $periodoHasta, $resumenSeleccion, $gestionNombre) {
             echo view('exportaciones.excel', [

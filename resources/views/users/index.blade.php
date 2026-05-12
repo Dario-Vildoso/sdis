@@ -220,7 +220,7 @@ $(function () {
     var table = $("#usersTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        "order": [],
+        "order": [0, "desc"],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -267,7 +267,7 @@ $(function () {
         // Opciones recomendadas para mejor experiencia
         "pagingType": "full_numbers",
         "scrollX": true,                    // Útil si tienes muchas columnas
-        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
+        // "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
     });
 
 });
@@ -390,7 +390,7 @@ $(function () {
                             <div class="input-group">
                                 <span class="input-group-text bg-info"><i class="ri ri-map-pin-line"></i></span>
                                 <select class="form-select" id="scopeType" name="tipo">
-                                    <option value="">Seleccione tipo...</option>
+                                    <option value="" disabled selected>Seleccione tipo...</option>
                                     <option value="red">Red</option>
                                     <option value="municipio">Municipio</option>
                                     <option value="establecimiento">Establecimiento</option>
@@ -401,41 +401,32 @@ $(function () {
 
                         <div class="col-md-6 alcance d-none" id="redField">
                             <label class="form-label fw-medium">Red</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-info"><i class="ri ri-node-tree"></i></span>
                                 <select class="form-select" id="scopeRed" name="red">
-                                    <option value="">Seleccione una red...</option>
+                                    <option value="" selected disabled>Seleccione una red...</option>
                                     @foreach($redes as $red)
                                         <option value="{{ $red->id }}">{{ $red->nombre }}</option>
                                     @endforeach
                                 </select>
-                            </div>
                         </div>
 
                         <div class="col-md-6 alcance d-none" id="municipioField">
                             <label class="form-label fw-medium">Municipio</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-info"><i class="ri ri-building-2-line"></i></span>
                                 <select class="form-select" id="scopeMun" name="municipio">
-                                    <option value="">Seleccione un municipio...</option>
+                                    <option value="" selected disabled>Seleccione un municipio...</option>
                                     @foreach($municipios as $municipio)
                                         <option value="{{ $municipio->id }}">{{ $municipio->nombre }}</option>
                                     @endforeach
                                 </select>
-                            </div>
                         </div>
 
                         <div class="col-md-6 alcance d-none" id="establecimientoField">
                             <label class="form-label fw-medium">Establecimiento</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-info"><i class="ri ri-hospital-line"></i></span>
                                 <select class="form-select" id="scopeEst" name="establecimiento">
-                                    <option value="">Seleccione un establecimiento...</option>
+                                    <option value="" selected disabled>Seleccione un establecimiento...</option>
                                     @foreach($establecimientos as $establecimiento)
                                         <option value="{{ $establecimiento->id }}">{{ $establecimiento->descripcion }}</option>
                                     @endforeach
                                 </select>
-                            </div>
                         </div>
                         @if(Auth::user()->hasPermissionTo('users.sistemas'))
                         <hr>
@@ -468,37 +459,26 @@ $(function () {
     </div>
 </div>
 <script>
-    $(function () {
-        $("#unsignedUsersTable").DataTable({
-            "pageLength": 5,
-            "language": {
-                "emptyTable": "No hay información",
-                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
-                "infoFiltered": "(Filtrado de _MAX_ total registros)",
-                "infoPostFix": "",
-                "thousands": ",",
-                "lengthMenu": "",
-                "loadingRecords": "Cargando...",
-                "processing": "Procesando...",
-                "search": "Buscador:",
-                "zeroRecords": "Sin resultados encontrados",
-                "paginate": {
-                    "first": "Primero",
-                    "last": "Ultimo",
-                    "next": "Siguiente",
-                    "previous": "Anterior"
-                }
-            },
-            "responsive": true, "lengthChange": true, "autoWidth": false,
-
-        }).buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
-    });
-</script>
-<script>
         $(function () {
+            
                 // Base URL for update action
                 var baseUrl = "{{ url('users') }}";
+
+                function initScopeEstSelect2() {
+                    var $scopeEst = $('#scopeEst');
+                    if ($scopeEst.length === 0) {
+                        return;
+                    }
+                    if ($scopeEst.hasClass('select2-hidden-accessible')) {
+                        $scopeEst.select2('destroy');
+                    }
+                    $scopeEst.select2({
+                        dropdownParent: $('#userModal .modal-body'),
+                        placeholder: 'Seleccione un establecimiento...',
+                        width: '100%'
+                    });
+                }
+
                 function setTypeField() {
                     var alcance = $('#userRoles option:selected').data('alcance');
                     if (alcance == '1') {
@@ -516,6 +496,7 @@ $(function () {
                             $('#establecimientoField').removeClass('d-none').prop('required', true);
                             $('#municipioField').addClass('d-none').prop('required', false);
                             $('#redField').addClass('d-none').prop('required', false);
+                            initScopeEstSelect2();
                     } else if (selectedType === 'municipio') {
                             $('#establecimientoField').addClass('d-none').prop('required', false);
                             $('#municipioField').removeClass('d-none').prop('required', true);
@@ -536,6 +517,10 @@ $(function () {
                 $('#scopeType').on('change', function () {
                     setScopeField();
                 })
+
+                $('#userModal').on('shown.bs.modal', function () {
+                    initScopeEstSelect2();
+                });
 
                 // New user: reset form
                 $('#btnNewUser').on('click', function () {
@@ -585,5 +570,33 @@ $(function () {
 
                 });
         });
+</script>
+<script>
+    $(window).on('load', function () {
+        $("#unsignedUsersTable").DataTable({
+            "pageLength": 5,
+            "language": {
+                "emptyTable": "No hay información",
+                "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                "infoFiltered": "(Filtrado de _MAX_ total registros)",
+                "infoPostFix": "",
+                "thousands": ",",
+                "lengthMenu": "",
+                "loadingRecords": "Cargando...",
+                "processing": "Procesando...",
+                "search": "Buscador:",
+                "zeroRecords": "Sin resultados encontrados",
+                "paginate": {
+                    "first": "Primero",
+                    "last": "Ultimo",
+                    "next": "Siguiente",
+                    "previous": "Anterior"
+                }
+            },
+            "responsive": true, "lengthChange": true, "autoWidth": false,
+
+        }).buttons().container().appendTo('#dataTable_wrapper .col-md-6:eq(0)');
+    });
 </script>
 @endsection

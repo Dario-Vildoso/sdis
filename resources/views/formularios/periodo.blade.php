@@ -185,9 +185,9 @@ foreach ($rows[0] as $cabecera) {
                 <tr>
                     {{-- Columnas cabeceras vacías --}}
                     @foreach(end($rows) ?? [] as $cabecera)
-                        <td class="data text-center justify-content-center align-items-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? '' : '' }}"
+                        <td class="data text-center justify-content-center align-items-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'disabled' : '' }}"
                         style="height: 50px;" 
-                        contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'true' : 'true' }}" 
+                        contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'false' : 'true' }}" 
                         data-cabecera-id="{{ $cabecera->id }}" data-subvariable-id="{{ $subvariable->id }}" 
                         style="display: none">
                             @if($datos->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first())
@@ -277,8 +277,8 @@ foreach ($rows[0] as $cabecera) {
 
                     {{-- 🔹 Datos --}}
                     @foreach($variable->subvariables->where('estado', 'activo') as $subvariable)
-                        <td class="data text-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? '' : '' }}"
-                            contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'true' : 'true' }}"
+                        <td class="data text-center {{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'disabled' : '' }}"
+                            contenteditable="{{ $excepciones->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first() ? 'false' : 'true' }}"
                             data-cabecera-id="{{ $leaf->id }}"
                             data-subvariable-id="{{ $subvariable->id }}">
                             @if($datos->where('subvariable_id', $subvariable->id)->where('cabecera_id', $cabecera->id)->first())
