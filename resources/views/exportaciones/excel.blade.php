@@ -16,7 +16,7 @@
         $establecimientos = $resumenSeleccion['establecimientos'] ?? collect();
     @endphp
 
-    <h2 class="text-center">Reporte - {{ $formulario->nombre }}</h2>
+    <h2 class="text-center">Reporte - {{ $formulario->sistema->nombre }}: {{ $formulario->gestion->nombre }}</h2>
     <div>
         <strong>Formulario:</strong> {{ $formulario->descripcion }}
     </div>
@@ -35,7 +35,7 @@
 
         @if($establecimientos->isNotEmpty())
             <div class="col-md-4">
-                <strong>Establecimiento:</strong> {{ $establecimientos->implode(', ') }}
+                <strong>Establecimiento:</strong> {{ $establecimientos->take(5)->implode(', ') . ($establecimientos->count() > 5 ? '...' : '') }}
             </div>
         @endif
     </div>
@@ -44,7 +44,7 @@
             <strong>Gestión:</strong> {{ $gestionNombre ?? 'Sin gestión' }}
         </div>
         <div class="col-md-4">
-            <strong>Periodo:</strong> {{ $periodoRango }} мне не удалось найти описание для этого периода
+            <strong>Periodo:</strong> {{ $periodoRango }}
         </div>
     </div>
 

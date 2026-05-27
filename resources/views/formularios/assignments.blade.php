@@ -471,7 +471,7 @@ $rows = $buildRows($variable->cabeceras);
         font-size: x-small
     }
     table.table-materio td.subvariable-cell {
-        background: hsl(199, 12%, 45%) !important;
+        background: #657881 !important;
         padding: 5px 10px !important;
     }
     table.table-materio td.data {

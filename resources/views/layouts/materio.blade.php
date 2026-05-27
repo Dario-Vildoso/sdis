@@ -19,7 +19,7 @@
     <!-- alertas-->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- datatables-->
-    <link rel="icon" href="{{ asset('sedes.jpg') }}" type="image/jpg">
+    <!-- <link rel="icon" href="{{ asset('sedes.jpg') }}" type="image/jpg"> -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{url('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
     <link rel="stylesheet" href="{{url('plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">

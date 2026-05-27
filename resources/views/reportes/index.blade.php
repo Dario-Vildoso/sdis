@@ -57,16 +57,31 @@
                                 <select id="formularioSelect" name="formulario_ids[]" class="form-select" multiple size="1">
                                     @foreach($formularios as $item)
                                         <option value="{{ $item->id }}" {{ $formularioIdsSeleccionados->contains($item->id) ? 'selected' : '' }}>
-                                            {{ $item->sistema->nombre ?? 'Sin sistema' }} - {{ $item->gestion->nombre ?? 'Sin gestión' }}
+                                            {{ $item->sistema->nombre ?? 'Sin sistema' }} - {{ $item->gestion->nombre ?? 'Sin gestión' }}: {{ $item->descripcion }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <small class="text-muted">Selecciona uno o más formularios (Ctrl + clic).</small>
+                            <small class="text-muted">Selecciona uno o mas formularios (Ctrl + clic).</small>
                         </div>
+
+                        @if($formulariosSeleccionados->isNotEmpty())
+                            <div class="col-12">
+                                <label class="form-label">Variables</label>
+                                <select name="variable_ids[]" id="variableSelect" class="form-select" multiple size="6">
+                                    @foreach($variablesDisponibles as $variable)
+                                        <option value="{{ $variable->id }}" {{ $variableIdsSeleccionadas->contains($variable->id) ? 'selected' : '' }}>
+                                            {{ $variable->descripcion }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Selecciona una o más variables.</small>
+                            </div>
+                        @endif
+
                         @foreach($formulariosSeleccionados as $formSeleccionado)
                             @php
-                                $periodosFormulario = $periodosPorFormulario->get($formSeleccionado->id, collect());
+                                $periodosFormulario = $periodosPorFormulario->get($formSeleccionado->id, collect())->sortBy('numero');
                             @endphp
                             <div class="col-12">
                                 <div class="border rounded p-2">
@@ -105,7 +120,7 @@
                 <div class="col-md-6">
                     <div class="row g-3">
 
-                        @if(in_array($scopeTipo, ['red', 'sedes']))
+                        @if(in_array($scopeTipo, ['red', 'sedes']) || Auth::user()->hasRole('admin') || Auth::user()->hasRole('super-admin'))
                             <div class="col-md-6">
                                 <label class="form-label">Red(es)</label>
                                 <select name="red_ids[]" id="redSelect" class="form-select" multiple size="2">
@@ -118,7 +133,7 @@
                             </div>
                         @endif
 
-                        @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']))
+                        @if(in_array($scopeTipo, ['municipio', 'red', 'sedes']) || Auth::user()->hasRole('admin') || Auth::user()->hasRole('super-admin'))
                             <div class="col-md-6">
                                 <label class="form-label">Municipio(s)</label>
                                 <select name="municipio_ids[]" id="municipioSelect" class="form-select" multiple size="2">
@@ -150,8 +165,8 @@
                             </div>
                             <select name="establecimiento_ids[]" id="establecimientoSelect" class="form-select" multiple size="6">
                                 @foreach($establecimientosDisponibles as $establecimiento)
-                                    <option value="{{ $establecimiento->id }}" {{ $establecimientosSeleccionados->contains($establecimiento->id) || $establecimientosDisponibles->count() == 1 ? 'selected' : '' }}>
-                                        {{ $establecimiento->descripcion }} - {{ $establecimiento->nivel }}º Nivel
+                                            <option value="{{ $establecimiento->id }}" data-municipio-id="{{ $establecimiento->id_mun }}" {{ $establecimientosSeleccionados->contains($establecimiento->id) ? 'selected' : '' }}>
+                                        {{ $establecimiento->descripcion }} - {{ $establecimiento->nivel }}Âº Nivel
                                     </option>
                                 @endforeach
                             </select>
@@ -173,7 +188,7 @@
 
             </div>
 
-            {{-- 🔹 BOTONES --}}
+            {{-- ðŸ”¹ BOTONES --}}
             <div class="d-flex gap-2 mt-4">
                 <button class="btn text-white" type="submit" style="background-color: #139b92;">
                     <i class="ri ri-filter-3-line"></i> Aplicar filtros
@@ -187,8 +202,10 @@
 
 @if($formulariosSeleccionados->isEmpty())
     <div class="alert alert-info">Selecciona uno o más formularios para generar el reporte.</div>
-@elseif(!$hayVariablesComunes)
-    <div class="alert alert-warning">Los formularios seleccionados no comparten variables en común.</div>
+@elseif(!$hayVariablesDisponibles)
+    <div class="alert alert-warning">No hay variables disponibles para los formularios seleccionados.</div>
+@elseif(!$hayVariablesSeleccionadas)
+    <div class="alert alert-info">Selecciona al menos una variable para generar el reporte.</div>
 @elseif(empty($rows))
     <div class="alert alert-warning">No hay datos para los filtros seleccionados.</div>
 @else
@@ -364,8 +381,8 @@
 
 <script>
     $(function () {
-        $('#redSelect').on('change', function () {
-            const selectedRedes = $(this).val() || [];
+        const refreshMunicipios = () => {
+            const selectedRedes = $('#redSelect').val() || [];
 
             $('#municipioSelect option').each(function () {
                 const redId = String($(this).data('red-id'));
@@ -373,8 +390,39 @@
 
                 $(this).prop('disabled', !match);
                 this.hidden = !match;
+                if (selectedRedes.length > 0) {
+                    $(this).prop('selected', match);
+                }
             });
+        };
+
+        const refreshEstablecimientos = () => {
+            const selectedMunicipios = $('#municipioSelect').val() || [];
+
+            $('#establecimientoSelect option').each(function () {
+                const municipioId = String($(this).data('municipio-id'));
+                const match = selectedMunicipios.length === 0 || selectedMunicipios.includes(municipioId);
+
+                $(this).prop('disabled', !match);
+                this.hidden = !match;
+            });
+
+            if (selectedMunicipios.length && $('#establecimientoSelect option:selected').length === 0) {
+                $('#establecimientoSelect option:visible').prop('selected', true);
+            }
+        };
+
+        $('#redSelect').on('change', function () {
+            refreshMunicipios();
+            refreshEstablecimientos();
         });
+
+        $('#municipioSelect').on('change', function () {
+            refreshEstablecimientos();
+        });
+
+        refreshMunicipios();
+        refreshEstablecimientos();
 
         $('#establecimientoSearch').on('input', function () {
             const term = $(this).val().toLowerCase().trim();

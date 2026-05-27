@@ -118,7 +118,8 @@
                     </div>
                 @endif
 
-                <div class="col-md-4">
+                @if (Auth::user()->alcances?->tipo == 'municipio' || Auth::user()->alcances?->tipo == 'red' || Auth::user()->alcances?->tipo == 'sedes' || Auth::user()->hasRole('admin') || Auth::user()->hasRole('super-admin'))
+                    <div class="col-md-4">
                     <label class="form-label">Establecimientos (selección múltiple)</label>
                     <div class="input-group mb-2">
                         <span class="input-group-text bg-black text-white">
@@ -140,6 +141,7 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
             </div>
 
             <div class="d-flex gap-2 mt-4">
@@ -152,7 +154,7 @@
     </div>
 </div>
 
-<script>
+        <script>
     document.addEventListener('DOMContentLoaded', function () {
         const filterInputs = Array.from(document.querySelectorAll('.filter-search'));
 

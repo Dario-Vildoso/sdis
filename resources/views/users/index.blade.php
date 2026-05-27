@@ -98,7 +98,7 @@
                 <th>Rol</th>
                 @if (Auth::user()->hasPermissionTo('users.management'))                
                 <th>Habilitar</th>
-                <th class="actions">Acciones</th>
+                <th class="actions" style="width: 200px;">Acciones</th>
                 @endif
             </tr>
             </thead>
@@ -129,7 +129,7 @@
                             <input class="form-check-input toggle-estado" type="checkbox" role="switch" id="toggle-estado-{{ $user->id }}" data-id="{{ $user->id }}" {{ $user->estado ? 'checked' : '' }}>
                         </div>
                     </td>
-                    <td>
+                    <td style="width: 8rem;">
                         <button type="button"
                                 class=" btn-icon edit-user"
                                 data-id="{{ $user->id }}"
@@ -153,6 +153,9 @@
                                 <i class="ri ri-delete-bin-line fs-4 bg-danger"></i>
                             </button>
                         </form>
+                        <button class="btn-icon passwordReset" data-id="{{ $user->id }}">
+                            <i class="ri ri-key-line fs-4 bg-info"></i>
+                        </button>
                         @endif
                     </td>
                     @endif
@@ -287,6 +290,7 @@ $(function () {
             </div>
 <hr>
             <div class="modal-body">
+                <div id="unsignedUsersSection">
                     <table id="unsignedUsersTable" class="table table-sm table-hover">
                         <thead>
                         <tr>
@@ -325,10 +329,11 @@ $(function () {
                         @endforeach
                         </tbody>
                     </table>
-                <button class="btn mb-3 text-white" id="btnNuevoUsuario" style="background-color: #17a2b8" onclick="$('#formNewUser').slideDown();">
-                   + Nuevo usuario
-                </button>
-                <div id="formNewUser" style="display: none;">
+                    <button class="btn mb-3 text-white" id="btnNuevoUsuario" style="background-color: #17a2b8" onclick="$('#formNewUser').slideDown();">
+                        + Nuevo usuario
+                    </button>
+                </div>
+                    <div id="formNewUser">
                     <hr>
                 <form id="userForm" method="POST">
                     @csrf
@@ -360,6 +365,7 @@ $(function () {
                                        placeholder="••••••••••"
                                        required>
                             </div>
+                            <small class="text-muted">Dejar vacío para conservar la contraseña actual.</small>
                         </div>
 
                         <hr class="my-2">
@@ -376,7 +382,7 @@ $(function () {
                                         <option value="{{ $role->id }}" data-alcance="{{ $role->hasPermissionTo('users.operators') }}">{{ strtoupper($role->name) }}</option>
                                     @else
                                         @if (Auth::user()->hasPermissionTo('users.admins'))
-                                        <option value="{{ $role->id }}" data-rol="{{ $role->slug }}" disabled>{{ strtoupper($role->slug) }}</option>
+                                        <option value="{{ $role->id }}" data-rol="{{ $role->slug }}">{{ strtoupper($role->slug) }}</option>
                                         @endif
                                     @endif
                                     @endforeach
@@ -463,6 +469,7 @@ $(function () {
             
                 // Base URL for update action
                 var baseUrl = "{{ url('users') }}";
+                var canEditUserPassword = {{ Auth::user()->hasRole('admin') || Auth::user()->hasRole('super-admin') ? 'true' : 'false' }};
 
                 function initScopeEstSelect2() {
                     var $scopeEst = $('#scopeEst');
@@ -535,39 +542,78 @@ $(function () {
                         $('#userRoles').val('');
                         setTypeField();
                         setScopeField();
+                        // Mostrar tabla, ocultar formulario
+                        $('#unsignedUsersSection').removeClass('d-none');
+                        $('#formNewUser').hide();
                 });
 
                 // Edit user: populate and set action
                 $(document).on('click', '.edit-user', function () {
-                    // alert('id')
-                        var id = $(this).data('id');
-                        // alert(id)
-                        var name = $(this).data('name');
-                        // alert(name)
-                        var email = $(this).data('email');
-                        // alert(email)
-                        var rol = $(this).data('rol');
-                        var rolId = $(this).data('rol-id');
-                        var tipo = $(this).data('tipo');
-                        // alert(tipo)
-                        var alcance = $(this).data('alcance');
-                        // alert(alcance)
-                        var sistemas = $(this).data('sistemas');
-                        $('#userModalLabel').text('Editar usuario');
-                        $('#userForm').attr('action', baseUrl + '/' + id);
-                        $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
-                        $('#userName').val(name);
-                        $('#userEmail').val(email);
-                        $('#passwordField').addClass('d-none'); // Oculta el campo de contraseña al editar
-                        $('#userPassword').prop('required', false).val('');
-                        $('#userRoles').val(rolId);
-                        setTypeField();
-                        $('#scopeType').val(tipo)
-                        setScopeField();
-                        $('.alcance select.form-select').val(alcance);
-                        $('#userSistemas').val(sistemas);
-                        $('#userSubmit').text('Actualizar');
-
+                    var id = $(this).data('id');
+                    var name = $(this).data('name');
+                    var email = $(this).data('email');
+                    var rol = $(this).data('rol');
+                    var rolId = $(this).data('rol-id');
+                    var tipo = $(this).data('tipo');
+                    var alcance = $(this).data('alcance');
+                    var sistemas = $(this).data('sistemas');
+                    $('#userModalLabel').text('Editar usuario');
+                    $('#userForm').attr('action', baseUrl + '/' + id);
+                    $('#formMethod').val('PUT'); // Cambia el método a PUT para actualización
+                    $('#userName').val(name);
+                    $('#userEmail').val(email);
+                    if (canEditUserPassword) {
+                        $('#passwordField').removeClass('d-none');
+                    } else {
+                        $('#passwordField').addClass('d-none');
+                    }
+                    $('#userPassword').prop('required', false).val('');
+                    $('#userRoles').val(rolId);
+                    setTypeField();
+                    $('#scopeType').val(tipo)
+                    setScopeField();
+                    $('.alcance select.form-select').val(alcance);
+                    $('#userSistemas').val(sistemas);
+                    $('#userSubmit').text('Actualizar');
+                    // Ocultar tabla, mostrar formulario
+                    $('#unsignedUsersSection').addClass('d-none');
+                    $('#formNewUser').slideDown();
+                });
+                $(document).on('click', '.passwordReset', function () {
+                    var userId = $(this).data('id');
+                    Swal.fire({
+                        title: '¿Restablecer contraseña?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Continuar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: baseUrl + '/' + userId + '/reset-password',
+                                type: 'POST',
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    _method: 'PATCH'
+                                },
+                                success: function (res) {
+                                    Swal.fire(
+                                        '¡Contraseña restablecida!',
+                                        'Contraseña restablecida',
+                                        'success'
+                                    );
+                                },
+                                error: function (xhr) {
+                                    Swal.fire(
+                                        'Error',
+                                        '',
+                                        'error'
+                                    );
+                                }
+                            });
+                        }
+                    });
                 });
         });
 </script>

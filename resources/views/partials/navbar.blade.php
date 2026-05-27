@@ -64,11 +64,17 @@
                             <span>Inicio</span>
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                            <i class="ri ri-lock-password-line me-2"></i>
+                            <span>Cambiar contraseña</span>
+                        </a>
+                    </li>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button class="dropdown-item">
                             <i class="ri ri-logout-box-fill me-2"></i>
-                            Cerrar sesi贸n
+                            Cerrar sesión
                         </button>
                     </form>
                 </ul>

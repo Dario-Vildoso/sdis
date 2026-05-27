@@ -41,6 +41,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('users/{user}', [UserController::class, 'destroy'])->middleware('permission:users.management')->name('users.destroy');
     Route::put('users/{user}/assignsystem', [UserController::class, 'assignSystem'])->middleware('permission:users.management')->name('users.assignsystem');
     Route::patch('users/{user}/toggle', [UserController::class, 'toggle'])->middleware('permission:users.management')->name('users.toggle');
+    Route::patch('users/{user}/reset-password', [UserController::class, 'resetPassword'])->middleware('permission:users.management')->name('users.resetPassword');
 
     // Roles
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.index');
@@ -127,8 +128,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'cargarPeriodo'])->middleware('permission:formularios.submit')->name('formularios.periodo');
     Route::post('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'storeData'])->middleware('permission:formularios.submit')->name('formularios.guardarPeriodo');
 
+    // Reportes
     Route::get('reportes', [ReporteController::class, 'index'])->middleware('permission:reportes')->name('reportes.index');
+    Route::get('reportes-tabulator', [ReporteController::class, 'tabulator'])->middleware('permission:reportes')->name('reportes.tabulator');
     Route::get('reportes/export/{variable}', [ReporteController::class, 'exportVariable'])->middleware('permission:exportaciones')->name('reportes.export');
+    Route::get('reportes/pivote', [ReporteController::class, 'pivote'])->middleware('permission:reportes')->name('reportes.pivote');
+    Route::get('reportes/pivote/metadata', [ReporteController::class, 'pivoteMetadata'])->middleware('permission:reportes')->name('reportes.pivote.metadata');
+    Route::post('reportes/pivote/datos', [ReporteController::class, 'pivoteDatos'])->middleware('permission:reportes')->name('reportes.pivote.datos');
     });
     
 

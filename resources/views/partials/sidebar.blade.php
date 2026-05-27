@@ -146,6 +146,18 @@
                         <div>Por Formulario</div>
                     </a>
                 </li>
+                <li class="menu-item {{ request()->routeIs('reportes.tabulator') ? 'active' : '' }}">
+                    <a href="{{ route('reportes.tabulator') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('reportes.tabulator') ? 'ri-table-fill' : 'ri-table-line' }} bg-warning"></i>
+                        <div>Por Variable (Tabulator)</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ request()->routeIs('reportes.pivote') ? 'active' : '' }}">
+                    <a href="{{ route('reportes.pivote') }}" class="menu-link">
+                        <i class="menu-icon ri {{ request()->routeIs('reportes.pivote') ? 'ri-table-fill' : 'ri-table-line' }} bg-warning"></i>
+                        <div>Dinámico</div>
+                    </a>
+                </li>
                 @if (Auth::user()->hasAnyPermission(['oportunidad']) && Auth::user()->alcances?->tipo != 'establecimiento')
                 <li class="menu-item {{ request()->routeIs('reportes.oportunidad') ? 'active' : '' }}">
                     <a href="{{ route('reportes.oportunidad') }}" class="menu-link">
@@ -158,7 +170,7 @@
         </li>
         @endif
         <!-- ------------------------------------- -->
-        @if (Auth::user()->hasPermissionTo('formularios.submit'))
+        @if (Auth::user()->hasPermissionTo('formularios.submit') && (Auth::user()->alcances?->tipo == 'establecimiento'))
         <li class="menu-item {{ request()->routeIs('formularios.menu') ? 'open' : '' }}">
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri {{ request()->routeIs('formularios.menu') ? 'ri-survey-fill' : 'ri-survey-line' }} bg-warning"></i>
@@ -175,12 +187,6 @@
                     </a>
                 </li>
                 @endif
-                <li class="menu-item {{ request()->routeIs('') ? 'active' : '' }}">
-                    <a href="" class="menu-link disabled">
-                        <i class="menu-icon ri {{ request()->routeIs('') ? 'ri-alert-fill' : 'ri-alert-line' }} bg-warning"></i>
-                        <div>Pendientes</div>
-                    </a>
-                </li>
             </ul>
         </li>
         @endif

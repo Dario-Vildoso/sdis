@@ -927,10 +927,22 @@ $rows = $buildRows($variable->cabeceras);
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Cambios guardados exitosamente');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Éxito',
+                            text: response.message,
+                            timer: 2500,
+                            showConfirmButton: false,
+                        });
                         location.reload();
                     } else {
-                        alert(response.message || 'Error al guardar');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Error al guardar',
+                            timer: 2500,
+                            showConfirmButton: false,
+                        });
                     }
                     btn.prop('disabled', false).html('<i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>');
                 },
@@ -940,7 +952,13 @@ $rows = $buildRows($variable->cabeceras);
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         msg = xhr.responseJSON.message;
                     }
-                    alert(msg);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: msg,
+                        timer: 2500,
+                        showConfirmButton: false,
+                    });
                     btn.prop('disabled', false).html('<i class="ri ri-save-fill"></i> <span>&nbsp;Guardar</span>');
                 }
             });

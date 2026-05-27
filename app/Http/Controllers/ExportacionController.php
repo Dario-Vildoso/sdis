@@ -22,8 +22,15 @@ class ExportacionController extends Controller
 
         $scopeData = $this->resolveScope($scope?->tipo, (int) ($scope?->alcance_id));
         $establecimientosScope = $scopeData['establecimientos'];
-
-        $formularios = Formulario::query()->where('sistema_id', $user->sistema_id)->orderBy('id')->get();
+        $formularios = Formulario::query()
+            ->where('sistema_id', $user->sistema_id)
+            ->whereHas('establecimientos', function ($q) use ($establecimientosScope) {
+                $q->whereIn(
+                    'establecimientos.id',
+                    $establecimientosScope->pluck('id')
+                );
+            })
+            ->get();
 
         $redesDisponibles = $establecimientosScope
             ->groupBy('red_id')
@@ -61,7 +68,7 @@ class ExportacionController extends Controller
             if ($formulario) {
                 $periodos = Periodo::query()
                     ->where('formulario_id', $formulario->id)
-                    ->orderBy('fecha_inicio')
+                    ->orderBy('numero')
                     ->get();
             }
         }
@@ -100,14 +107,11 @@ class ExportacionController extends Controller
             ->filter(fn (Collection $ids) => $ids->isNotEmpty())
             ->keys();
 
-        if ($tiposConSeleccion->count() !== 1) {
+        if ($tiposConSeleccion->count() > 1) {
             return back()
                 ->withInput()
                 ->withErrors(['scope_selection' => 'Debes seleccionar elementos de un solo tipo: redes, municipios o establecimientos.']);
         }
-
-        $tipoSeleccion = $tiposConSeleccion->first();
-        $idsSeleccionados = $selecciones[$tipoSeleccion];
 
         $formulario = Formulario::with([
             'variables' => function ($query) {
@@ -122,33 +126,57 @@ class ExportacionController extends Controller
             ->where('formulario_id', $formulario->id)
             ->orderBy('fecha_inicio')
             ->get();
-
-        $periodoDesde = (int) $validated['periodo_desde_id'];
-        $periodoHasta = (int) $validated['periodo_hasta_id'];
+        $periodoDesdeId = (int) $validated['periodo_desde_id'];
+        $periodoHastaId = (int) $validated['periodo_hasta_id'];
+        $periodoDesde = (int) Periodo::findOrFail($periodoDesdeId)->numero;
+        $periodoHasta = (int) Periodo::findOrFail($periodoHastaId)->numero;
 
         if ($periodoDesde > $periodoHasta) {
             [$periodoDesde, $periodoHasta] = [$periodoHasta, $periodoDesde];
         }
 
         $periodosEnRango = $periodos
-            ->filter(fn ($periodo) => $periodo->id >= $periodoDesde && $periodo->id <= $periodoHasta)
+            ->filter(fn ($periodo) => (int) $periodo->numero >= $periodoDesde && (int) $periodo->numero <= $periodoHasta)
             ->pluck('id');
 
         if ($periodosEnRango->isEmpty()) {
             return back()->withInput()->withErrors(['periodo_desde_id' => 'No hay periodos válidos en el rango seleccionado para el formulario.']);
         }
 
-        $establecimientosBase = $this->establecimientosBaseQuery()->get();
+        // Limitar los establecimientos a los que el usuario tiene acceso según su alcance
+        $user = auth()->user();
+        $scope = $user->alcances()->first();
+        $scopeData = $this->resolveScope($scope?->tipo, (int) ($scope?->alcance_id));
+        $establecimientosBase = $scopeData['establecimientos'];
 
-        $establecimientosSeleccionados = match ($tipoSeleccion) {
-            'red' => $establecimientosBase->whereIn('red_id', $idsSeleccionados),
-            'municipio' => $establecimientosBase->whereIn('id_mun', $idsSeleccionados),
-            default => $establecimientosBase->whereIn('id', $idsSeleccionados),
-        };
+        // Construir la lista final de establecimientos seleccionados como la unión
+        // de las selecciones explícitas (establecimientos, municipios, redes).
+        $establecimientosSeleccionados = collect();
 
+        if ($selecciones['establecimiento']->isNotEmpty()) {
+            $establecimientosSeleccionados = $establecimientosSeleccionados->merge(
+                $establecimientosBase->whereIn('id', $selecciones['establecimiento'])
+            );
+        }
+
+        if ($selecciones['municipio']->isNotEmpty()) {
+            $establecimientosSeleccionados = $establecimientosSeleccionados->merge(
+                $establecimientosBase->whereIn('id_mun', $selecciones['municipio'])
+            );
+        }
+
+        if ($selecciones['red']->isNotEmpty()) {
+            $establecimientosSeleccionados = $establecimientosSeleccionados->merge(
+                $establecimientosBase->whereIn('red_id', $selecciones['red'])
+            );
+        }
+
+        $establecimientosSeleccionados = $establecimientosSeleccionados->unique('id')->values();
+
+        // Si no se eligió nada, usar todos los establecimientos a los que tiene acceso el usuario
         if ($establecimientosSeleccionados->isEmpty()) {
-            return back()->withInput()->withErrors(['scope_selection' => 'No hay establecimientos relacionados a la selección realizada.']);
-        }   
+            $establecimientosSeleccionados = $establecimientosBase;
+        }
 
         $datos = Dato::query()
             ->whereIn('periodo_id', $periodosEnRango)
@@ -168,18 +196,18 @@ class ExportacionController extends Controller
         $gestionNombre = optional(Gestion::find($formulario->gestion_id))->nombre;
 
 
-        $periodDesdeDescripcion = $periodos->firstWhere('id', $periodoDesde)?->descripcion ?? 'desde';
-        $periodHastaDescripcion = $periodos->firstWhere('id', $periodoHasta)?->descripcion ?? 'hasta';
+        $periodDesdeDescripcion = $periodos->firstWhere('id', $periodoDesdeId)?->descripcion ?? 'desde';
+        $periodHastaDescripcion = $periodos->firstWhere('id', $periodoHastaId)?->descripcion ?? 'hasta';
 
         $filename = strtoupper(str($formulario->sistema->nombre) . '-' . $formulario->gestion->nombre . '_' . $periodDesdeDescripcion . '-' . $periodHastaDescripcion) . '.xls';
 
-        return response()->streamDownload(function () use ($rows, $formulario, $periodos, $periodoDesde, $periodoHasta, $resumenSeleccion, $gestionNombre) {
+        return response()->streamDownload(function () use ($rows, $formulario, $periodos, $periodoDesdeId, $periodoHastaId, $resumenSeleccion, $gestionNombre) {
             echo view('exportaciones.excel', [
                 'rows' => $rows,
                 'formulario' => $formulario,
                 'periodos' => $periodos,
-                'periodoDesde' => $periodoDesde,
-                'periodoHasta' => $periodoHasta,
+                'periodoDesde' => $periodoDesdeId,
+                'periodoHasta' => $periodoHastaId,
                 'resumenSeleccion' => $resumenSeleccion,
                 'gestionNombre' => $gestionNombre,
             ])->render();
@@ -199,7 +227,22 @@ class ExportacionController extends Controller
         ]));
 
         return $formulario->variables->map(function ($variable) use ($establecimientosSeleccionados, $datosAgrupados) {
-            $cabecerasHoja = $this->leafCabeceras($variable->cabeceras);
+            $childrenByParent = $variable->cabeceras->groupBy('cabecera_id');
+            $rootCabeceras = $childrenByParent->get(null, collect())->sortBy('id')->values();
+
+            // Calcular cabeceras hoja en orden jerárquico
+            $cabecerasHoja = collect();
+            $walk = function (Collection $items) use (&$walk, $childrenByParent, &$cabecerasHoja) {
+                foreach ($items->sortBy('id') as $cabecera) {
+                    $children = $childrenByParent->get($cabecera->id, collect());
+                    if ($children->isEmpty()) {
+                        $cabecerasHoja->push($cabecera);
+                        continue;
+                    }
+                    $walk($children);
+                }
+            };
+            $walk($rootCabeceras);
 
             $subvariables = $variable->subvariables->map(function ($subvariable) use ($establecimientosSeleccionados, $datosAgrupados, $cabecerasHoja) {
                 $totales = $cabecerasHoja->mapWithKeys(function ($cabecera) use ($establecimientosSeleccionados, $subvariable, $datosAgrupados) {

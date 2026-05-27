@@ -1,6 +1,6 @@
 @extends('layouts.materio')
 
-@section('title', 'Usuarios')
+@section('title', 'Formularios Actuales')
 
 @section('content')
 
@@ -31,7 +31,7 @@
             </thead>
             <tbody>
             @foreach($formularios as $formulario)
-            @foreach ($formulario->periodos as $periodo)
+            @foreach ($formulario->periodos->sortByDesc('numero') as $periodo)
             
             <tr>
                 <td class="data">{{ $formulario->sistema->nombre ?? 'Sin sistema' }}</td>
@@ -77,6 +77,7 @@ $(function () {
     var table = $("#dataTable").DataTable({
         "pageLength": 10,                    // Cambié de 6 a 10 (más estándar)
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+        "order": [],
         "language": {
             "emptyTable": "No hay información",
             "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
@@ -123,7 +124,7 @@ $(function () {
         // Opciones recomendadas para mejor experiencia
         "pagingType": "full_numbers",
         "scrollX": true,                    // Útil si tienes muchas columnas
-        "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
+        // "stateSave": true,                  // Recuerda la página, filtros y orden al recargar
     });
 
     // Mover los botones a la izquierda (opcional)

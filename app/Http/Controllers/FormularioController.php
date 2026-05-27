@@ -96,34 +96,44 @@ class FormularioController extends Controller
         return view('formularios.periodo', compact('formulario', 'user', 'periodo', 'datos', 'excepciones'));
     }
 
-    public function storeData(Request $request, Formulario $formulario, Periodo $periodo)
-    {
-        $user = Auth::user();
-        $establecimiento_id = $user->alcances()->first()->alcance_id;
-        $datos = $request->datos;
-        $datos = json_decode($datos, true);
-        foreach ($datos as $dato) {
+public function storeData(Request $request, Formulario $formulario, Periodo $periodo)
+{
+    $user = Auth::user();
 
-            Dato::updateOrCreate(
-                [
-                    'cabecera_id' => $dato['cabecera_id'],
-                    'subvariable_id' => $dato['subvariable_id'],
-                    'periodo_id' => $periodo->id,
-                    'establecimiento_id' => $establecimiento_id,
-                ],
-                [
-                    'valor' => $dato['valor'],
-                    'fecha' => date('Y-m-d'),
-                    'hora' => date('H:i:s'),
-                ]
-            );
+    $establecimiento_id = $user->alcances()->first()->alcance_id;
+
+    $datos = json_decode($request->datos, true);
+
+    foreach ($datos as $dato) {
+
+        $conditions = [
+            'cabecera_id' => $dato['cabecera_id'],
+            'subvariable_id' => $dato['subvariable_id'],
+            'periodo_id' => $periodo->id,
+            'establecimiento_id' => $establecimiento_id,
+        ];
+
+        if (trim($dato['valor']) === '') {
+
+            Dato::where($conditions)->delete();
+
+            continue;
         }
 
-        return response()->json([
-            'message' => 'Datos guardados correctamente'
-        ]);
+        Dato::updateOrCreate(
+            $conditions,
+            [
+                'valor' => $dato['valor'],
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s'),
+            ]
+        );
     }
 
+    return response()->json([
+        'message' => 'Datos guardados correctamente'
+    ]);
+}
     public function asignarVariables(Formulario $formulario)
     {
         $formulario = Formulario::with(['variables.subvariables', 'variables.cabeceras' => function ($query) {

@@ -124,7 +124,7 @@ class UserController extends Controller
             $user->sistema_id = Auth::user()->sistema_id;
             $user->save();
         }
-        $user->assignRole(ROle::findOrFail($request->role));
+        $user->assignRole(Role::findOrFail($request->role));
         $user->load('roles');
         if ($user->hasPermissionTo('users.operators')) {
             switch ($request->tipo) {
@@ -147,6 +147,13 @@ class UserController extends Controller
                         'usuario_id' => $user->id,
                         'tipo' => $request->tipo,
                         'alcance_id' => $request->red
+                    ]);
+                    break;
+                case 'sedes':
+                    Alcance::create([
+                        'usuario_id' => $user->id,
+                        'tipo' => $request->tipo,
+                        'alcance_id' => null
                     ]);
                     break;
             }
@@ -188,7 +195,7 @@ class UserController extends Controller
 
         request()->validate([
             'name' => 'required|string|max:255',
-            'password' => 'nullable|string|min:8',
+            'password' => 'nullable|string',
             'role' => 'required|exists:roles,id',
             'sistemas' => 'nullable|array',
             'sistemas.*' => 'exists:sistemas,id',
@@ -214,6 +221,7 @@ class UserController extends Controller
                 'establecimiento' => $request->establecimiento,
                 'municipio' => $request->municipio,
                 'red' => $request->red,
+                'sedes' => 1,
             };
 
             Alcance::updateOrCreate(
@@ -236,6 +244,29 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('users.index')->with('success', 'Estado del usuario actualizado exitosamente.');
+    }
+
+    public function resetPassword(User $user)
+    {
+        switch ($user->alcances->tipo) {
+            case 'establecimiento':
+                $alcance = Establecimiento::find($user->alcances->alcance_id);
+                $user->password = $alcance->codigo_est ?? '12345678';
+                break;
+            case 'municipio':
+                $alcance = Municipio::find($user->alcances->alcance_id);
+                $user->password = $alcance->codigo ?? '12345678';
+                break; 
+            case 'red':
+                $alcance = Red::find($user->alcances->alcance_id);
+                $user->password = $alcance->codigo ?? '12345678';
+                break;
+            default:
+                $user->password = $user->sistema->nombre . '1234';
+        }
+        $user->save();
+
+        return response()->json(['password' => $user->password]);
     }
 
     /**
