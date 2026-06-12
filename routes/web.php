@@ -127,6 +127,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('formulario/menu', [FormularioController::class, 'menu'])->middleware('permission:formularios.submit')->name('formularios.menu');
     Route::get('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'cargarPeriodo'])->middleware('permission:formularios.submit')->name('formularios.periodo');
     Route::post('formulario/{formulario}/periodo/{periodo}', [FormularioController::class, 'storeData'])->middleware('permission:formularios.submit')->name('formularios.guardarPeriodo');
+    Route::post('formulario/{formulario}/periodo/{periodo}/sin-produccion', [FormularioController::class, 'sinProduccion'])->middleware('permission:formularios.submit')->name('formularios.sinProduccion');
 
     // Reportes
     Route::get('reportes', [ReporteController::class, 'index'])->middleware('permission:reportes')->name('reportes.index');

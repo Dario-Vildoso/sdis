@@ -31,13 +31,13 @@
             </thead>
             <tbody>
             @foreach($formularios as $formulario)
-            @foreach ($formulario->periodos->sortByDesc('numero') as $periodo)
-            
+            @foreach ($formulario->periodos as $periodo)
+            @if ((now() > $periodo->fecha_inicio && now() < $periodo->fecha_fin) || $periodo->estado)
             <tr>
                 <td class="data">{{ $formulario->sistema->nombre ?? 'Sin sistema' }}</td>
                 <td class="data">{{ $formulario->descripcion ?? 'Sin descripción' }}</td>
                 <td class="data">{{ $gestiones->where('id', $formulario->gestion_id)->first()->nombre ?? 'Sin gestión' }}</td>
-                <td class="data">{{ $periodo->descripcion }}</td>
+                <td class="data">{{ $periodo->descripcion }} </td>
                 <td class="data">{{ $periodo->fecha_inicio }}</td>
                 <td class="data">{{ $periodo->fecha_fin }}</td>
                 <td style="width: 20px">
@@ -48,24 +48,25 @@
                         data-gestion_id="{{ $formulario->gestion_id }}">
                         <i class="ri ri-pencil-line fs-4 bg-success"></i>
                     </button> -->
-                    @if ((now() > $periodo->fecha_inicio && now() < $periodo->fecha_fin) || $periodo->estado)
+                    
                     <button type="button" 
                         class="btn-icon"> 
                         <a href="{{ route('formularios.periodo', [$formulario, $periodo]) }}" class="btn-icon">
                             <i class="ri ri-pencil-line fs-4 bg-info"></i>
                         </a>
                     </button>
-                    @else
-                    <button type="button" 
-                        disabled
-                        class="btn btn-icon"> 
-                        <a href="{{ route('formularios.periodo', [$formulario, $periodo]) }}" class="btn-icon">
-                            <i class="ri ri-pencil-line fs-4 bg-info"></i>
-                        </a>
-                    </button>
-                    @endif
+                    <button type="button"
+                        {{ $periodo->produccion ? 'disabled' : '' }}
+                        class="btn btn-icon no-production"
+                        data-formulario="{{ $formulario->id }}"
+                        data-periodo="{{ $periodo->id }}"
+                        style="box-shadow: none">
+                    <i class="ri ri-close-circle-line fs-4 bg-danger"></i>
+                    
+                </button>
             </td>
         </tr>
+        @endif
         @endforeach
             @endforeach
             </tbody>
@@ -211,6 +212,50 @@ $(function () {
                 $('#dataForm').on('submit', function() {
                     $('#dataSubmit').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...');
                     
+                });
+                $('.no-production').on('click', function() {
+                    var formularioId = $(this).data('formulario');
+                    var periodoId = $(this).data('periodo');
+                    var url = '{{ route('formularios.sinProduccion', ['formulario' => ':formulario', 'periodo' => ':periodo']) }}'
+                                .replace(':formulario', formularioId)
+                                .replace(':periodo', periodoId);
+
+                    Swal.fire({
+                        title: '¿Marcar como sin producción?',
+                        text: "Esta acción marcará el periodo como sin datos de producción. ¿Deseas continuar?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Continuar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.post(url, {
+                                _token: '{{ csrf_token() }}'
+                            }, function(response) {
+                                if (response.success) {
+                                    Swal.fire(
+                                        'Actualizado',
+                                        response.message || 'El periodo ha sido marcado como sin producción.',
+                                        'success'
+                                    );
+                                } else {
+                                    Swal.fire(
+                                        'Error',
+                                        response.message || 'Ocurrió un error al actualizar.',
+                                        'error'
+                                    );
+                                }
+                            }).fail(function() {
+                                Swal.fire(
+                                    'Error',
+                                    'Ocurrió un error al procesar la solicitud.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
                 });
         });
 </script>

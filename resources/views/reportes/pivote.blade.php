@@ -258,6 +258,8 @@
         $('#redSelect, #municipioSelect, #establecimientoSelect').select2({ width: 'auto', placeholder: 'Todo', allowClear: false });
         $('#periodoDesdeSelect, #periodoHastaSelect').select2({ width: '100%', placeholder: 'Seleccione un periodo' });
 
+        clearFilterSelects();
+
         function ensureSpanishPivotLocale() {
             const utilities = $.pivotUtilities;
 
@@ -393,6 +395,50 @@
             wrapper.html(`<div class="small text-muted">${variables.length} variables disponibles.</div>`);
         }
 
+        function populateFilterOptions(select, items) {
+            if (!select.length) {
+                return;
+            }
+
+            select.empty();
+
+            items.forEach(item => {
+                const option = new Option(item.nombre, item.id, false, false);
+
+                if (item.red_id !== undefined) {
+                    $(option).attr('data-red-id', item.red_id);
+                }
+
+                if (item.municipio_id !== undefined) {
+                    $(option).attr('data-municipio-id', item.municipio_id);
+                }
+
+                select.append(option);
+            });
+
+            select.prop('disabled', items.length === 0).trigger('change.select2');
+        }
+
+        function clearFilterSelects() {
+            const selects = ['#redSelect', '#municipioSelect', '#establecimientoSelect'];
+            selects.forEach(selector => {
+                const select = $(selector);
+                if (!select.length) {
+                    return;
+                }
+                select.empty().val(null).prop('disabled', true).trigger('change.select2');
+            });
+        }
+
+        function updateFilterSelects(metadata) {
+            populateFilterOptions($('#redSelect'), metadata.redes || []);
+            populateFilterOptions($('#municipioSelect'), metadata.municipios || []);
+            populateFilterOptions($('#establecimientoSelect'), metadata.establecimientos || []);
+
+            filterMunicipios();
+            filterEstablecimientos();
+        }
+
         function filterMunicipios() {
             if (!$('#municipioSelect').length) {
                 filterEstablecimientos();
@@ -429,7 +475,7 @@
                 const matchRed = redes.length === 0 || redes.includes(redId);
                 const matchMunicipio = municipios.length === 0 || municipios.includes(municipioId);
                 const visible = matchRed && matchMunicipio;
-                $(this).prop('hidden', !visible);
+                $(this).prop('disabled', !visible);
                 if (visible) establecimientosValidos.push(String(this.value));
             });
 
@@ -630,6 +676,7 @@
         $('#formularioSelect').on('change', function () {
             const formularioIds = selectedValues('#formularioSelect');
             clearRenderedReport();
+            clearFilterSelects();
 
             if (formularioIds.length === 0) {
                 updatePeriodoSelects([]);
@@ -638,21 +685,23 @@
                 return;
             }
 
-            showStatus('info', 'Cargando periodos y variables...');
+            showStatus('info', 'Cargando periodos, variables y establecimientos...');
             $.get(metadataUrl, { formulario_ids: formularioIds })
                 .done(function (response) {
                     updatePeriodoSelects(response.periodos || []);
                     updateVariableSelect(response.variables || []);
+                    updateFilterSelects(response);
                     showStatus('info', 'Selecciona una o más variables y presiona Generar reporte.');
                 })
                 .fail(function () {
-                    showStatus('danger', 'No se pudieron cargar los periodos y variables de los formularios seleccionados.');
+                    showStatus('danger', 'No se pudieron cargar los datos del formulario seleccionado.');
                 });
         });
 
         $('#clearFilters').on('click', function () {
             $('#pivotReportForm')[0].reset();
-            $('#formularioSelect, #variableSelect, #redSelect, #municipioSelect, #establecimientoSelect').val(null).trigger('change');
+            $('#formularioSelect, #variableSelect').val(null).trigger('change');
+            clearFilterSelects();
             updatePeriodoSelects([]);
             updateVariableSelect([]);
             clearRenderedReport();

@@ -86,7 +86,7 @@ class EstablecimientoController extends Controller
             'descripcion' => 'required|string|max:255',
             'id_mun' => 'required|integer|exists:municipios,id',
             'codigo_est' => 'required|string|max:50|unique:establecimientos,codigo_est,'.$establecimiento->id,
-            'nivel' => 'required|integer|min:1|max:3',
+            'nivel' => 'required|integer|min:0|max:4',
         ]);
         $establecimiento->descripcion = $request->descripcion;
         $establecimiento->id_mun = $request->id_mun;

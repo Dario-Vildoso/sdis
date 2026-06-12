@@ -425,7 +425,6 @@ foreach ($rows[0] as $cabecera) {
 
         function saveData() {
             const datos = filterData();
-            alert(JSON.stringify(datos));
             $.post('{{ route('formularios.guardarPeriodo', [$formulario, $periodo]) }}', {
                 _token: '{{ csrf_token() }}',
                 datos: JSON.stringify(datos)

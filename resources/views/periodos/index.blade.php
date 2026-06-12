@@ -359,7 +359,8 @@ $(function () {
                 });
 
                 // Edit establishment: populate and set action
-                $('.edit-data').on('click', function () {
+                // Use event delegation for dynamically loaded rows from DataTable pagination
+                $(document).on('click', '.edit-data', function () {
                         var id = $(this).data('id');
                         var formularioId = $(this).data('formulario');
                         var descripcion = $(this).data('descripcion');

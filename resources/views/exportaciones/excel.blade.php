@@ -16,35 +16,21 @@
         $establecimientos = $resumenSeleccion['establecimientos'] ?? collect();
     @endphp
 
-    <h2 class="text-center">Reporte - {{ $formulario->sistema->nombre }}: {{ $formulario->gestion->nombre }}</h2>
-    <div>
+    <h2 style="text-align: center;">Reporte - {{ $formulario->sistema->nombre }}: {{ $formulario->gestion->nombre }}</h2>
+    <div style="font-size: large;">
         <strong>Formulario:</strong> {{ $formulario->descripcion }}
     </div>
     <div class="row">
-        @if($redes->isNotEmpty())
-            <div class="col-md-4">
-                <strong>Red:</strong> {{ $redes->implode(', ') }}
+        @if($redes->isNotEmpty() || $municipios->isNotEmpty() || $establecimientos->isNotEmpty())
+            <div style="font-size: large;" class="col-md-4">
+                <strong>Red:</strong> {{ $redes->implode(', ') }} &nbsp; <strong>Municipio:</strong> {{ $municipios->implode(', ') }} &nbsp; <strong>Establecimiento:</strong> {{ $establecimientos->take(5)->implode(', ') . ($establecimientos->count() > 5 ? '...' : '') }}
             </div>
         @endif
 
-        @if($municipios->isNotEmpty())
-            <div class="col-md-4">
-                <strong>Municipio:</strong> {{ $municipios->implode(', ') }}
-            </div>
-        @endif
-
-        @if($establecimientos->isNotEmpty())
-            <div class="col-md-4">
-                <strong>Establecimiento:</strong> {{ $establecimientos->take(5)->implode(', ') . ($establecimientos->count() > 5 ? '...' : '') }}
-            </div>
-        @endif
     </div>
     <div class="row">
-        <div class="col-md-4">
-            <strong>Gestión:</strong> {{ $gestionNombre ?? 'Sin gestión' }}
-        </div>
-        <div class="col-md-4">
-            <strong>Periodo:</strong> {{ $periodoRango }}
+        <div style="font-size: large;" class="col-md-4">
+            <strong>Gestión:</strong> {{ $gestionNombre ?? 'Sin gestión' }} &nbsp; <strong>Periodo:</strong> {{ $periodoRango }}
         </div>
     </div>
 
@@ -89,22 +75,22 @@
             $headerRows = $buildRows($rootCabeceras, $childrenByParent);
         @endphp
 
-        <table border="1" cellspacing="0" cellpadding="4" style="border-collapse: collapse; margin-top: 8px; margin-bottom: 20px;">
+        <table cellspacing="0" cellpadding="4" style="border-collapse: collapse; margin-top: 8px; margin-bottom: 20px;">
             <thead>
                 <tr>
-                    <th rowspan="{{ max($niveles, 1) }}" class="bg-warning">{{ $row['variable']->descripcion }}</th>
+                    <th style="border:1px solid #727272; background-color: #086375; color: white;" rowspan="{{ max($niveles, 1) }}" class="bg-warning">{{ $row['variable']->descripcion }}</th>
                     @foreach($headerRows[0] ?? [] as $cabecera)
                         @php
                             $children = $childrenByParent->get($cabecera->id, collect());
                         @endphp
 
                         @if($children->isEmpty())
-                            <th rowspan="{{ max($niveles, 1) }}">{{ $cabecera->descripcion }}</th>
+                            <th style="border:1px solid #727272; background-color: #139b92; color: white;" rowspan="{{ max($niveles, 1) }}">{{ $cabecera->descripcion }}</th>
                         @else
-                            <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}">{{ $cabecera->descripcion }}</th>
+                            <th style="border:1px solid #727272; background-color: #139b92; color: white;" colspan="{{ $countLeaves($cabecera, $childrenByParent) }}">{{ $cabecera->descripcion }}</th>
                         @endif
                     @endforeach
-                    <th rowspan="{{ max($niveles, 1) }}">Total</th>
+                    <th style="border:1px solid #727272; background-color: #086375; color: white;" rowspan="{{ max($niveles, 1) }}">Total</th>
                 </tr>
 
                 @for($i = 1; $i < $niveles; $i++)
@@ -115,11 +101,11 @@
                             @endphp
 
                             @if($children->isEmpty())
-                                <th rowspan="{{ $niveles - $i }}" style="white-space: nowrap; overflow: hidden;">
+                                <th style="border:1px solid #727272; background-color: #139b92; color: white;" rowspan="{{ $niveles - $i }}" style="white-space: nowrap; overflow: hidden;">
                                     {{ $cabecera->descripcion }}
                                 </th>
                             @else   
-                                <th colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" style="white-space: nowrap; overflow: hidden;">
+                                <th style="border:1px solid #727272; background-color: #139b92; color: white;" colspan="{{ $countLeaves($cabecera, $childrenByParent) }}" style="white-space: nowrap; overflow: hidden;">
                                     {{ $cabecera->descripcion }}
                                 </th>
                             @endif
@@ -130,15 +116,15 @@
             <tbody>
                 @foreach($row['subvariables'] as $subData)
                     <tr>
-                        <td>{{ $subData['subvariable']->descripcion }}</td>
+                        <td style="border:1px solid #727272; background-color: #657881; color: white;">{{ $subData['subvariable']->descripcion }}</td>
                         @foreach($row['cabeceras_hoja'] as $cabecera)
-                            <td>{{ $subData['totales']->get($cabecera->id, 0) }}</td>
+                            <td style="border:1px solid #727272;">{{ $subData['totales']->get($cabecera->id, 0) }}</td>
                         @endforeach
-                        <td>{{ $subData['totales']->sum() }}</td>
+                        <td style="border:1px solid #727272; background-color: #eef8f7;">{{ $subData['totales']->sum() }}</td>
                     </tr>
                 @endforeach
                 <tr>
-                    <td><strong>Total</strong></td>
+                    <td style="border:1px solid #727272; background-color: #086375; color: white;"><strong>Total</strong></td>
                     @foreach($row['cabeceras_hoja'] as $cabecera)
                         @php
                             $sum = 0;
@@ -146,7 +132,7 @@
                                 $sum += $subData['totales']->get($cabecera->id, 0);
                             }
                         @endphp
-                        <td><strong>{{ $sum }}</strong></td>
+                        <td style="border:1px solid #727272; background-color: #eef8f7;"><strong>{{ $sum }}</strong></td>
                     @endforeach
                     @php
                         $totalSum = 0;
@@ -154,7 +140,7 @@
                             $totalSum += $subData['totales']->sum();
                         }
                     @endphp
-                    <td><strong>{{ $totalSum }}</strong></td>
+                    <td style="border:1px solid #727272; background-color: #eef8f7;"><strong>{{ $totalSum }}</strong></td>
                 </tr>
                 <tr></tr>
             </tbody>

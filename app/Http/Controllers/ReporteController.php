@@ -228,7 +228,6 @@ class ReporteController extends Controller
         $scopeData = $this->resolveReportScope($user, $scope);
         $establecimientosScope = $scopeData['establecimientos'];
 
-
         $formularios = $this->formulariosAccesibles($user, $establecimientosScope)
             ->with(['sistema', 'gestion'])
             ->orderBy('id')
@@ -240,34 +239,9 @@ class ReporteController extends Controller
         $showEstablecimientoSelect = $isGlobalScope || in_array($scope?->tipo, ['red', 'municipio']);
         $autoFormularioIds = $formularios->count() === 1 ? $formularios->pluck('id') : collect();
 
-        $redesDisponibles = $establecimientosScope
-            ->groupBy('red_id')
-            ->map(fn ($items) => [
-                'id' => (int) $items->first()->red_id,
-                'nombre' => $items->first()->red_nombre,
-            ])
-            ->values();
-
-        $municipiosDisponibles = $establecimientosScope
-            ->groupBy('id_mun')
-            ->map(fn ($items) => [
-                'id' => (int) $items->first()->id_mun,
-                'nombre' => $items->first()->municipio_nombre,
-                'red_id' => (int) $items->first()->red_id,
-            ])
-            ->values();
-
-        $establecimientosDisponibles = $establecimientosScope
-            ->map(fn ($establecimiento) => [
-                'id' => (int) $establecimiento->id,
-                'nombre' => $establecimiento->descripcion,
-                'nivel' => $establecimiento->nivel,
-                'municipio_id' => (int) $establecimiento->id_mun,
-                'municipio_nombre' => $establecimiento->municipio_nombre,
-                'red_id' => (int) $establecimiento->red_id,
-                'red_nombre' => $establecimiento->red_nombre,
-            ])
-            ->values();
+        $redesDisponibles = collect();
+        $municipiosDisponibles = collect();
+        $establecimientosDisponibles = collect();
 
         return view('reportes.pivote', [
             'formularios' => $formularios,
@@ -309,6 +283,45 @@ class ReporteController extends Controller
             ->sortBy(fn ($formulario) => $formularioIds->search($formulario->id))
             ->values();
 
+        $formularioEstablecimientoIds = Establecimiento_Formulario::query()
+            ->whereIn('formulario_id', $formularios->pluck('id'))
+            ->pluck('establecimiento_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique();
+
+        $establecimientosFormularios = $scopeData['establecimientos']
+            ->whereIn('id', $formularioEstablecimientoIds)
+            ->values();
+
+        $redes = $establecimientosFormularios
+            ->groupBy('red_id')
+            ->map(fn ($items) => [
+                'id' => (int) $items->first()->red_id,
+                'nombre' => $items->first()->red_nombre,
+            ])
+            ->values();
+
+        $municipios = $establecimientosFormularios
+            ->groupBy('id_mun')
+            ->map(fn ($items) => [
+                'id' => (int) $items->first()->id_mun,
+                'nombre' => $items->first()->municipio_nombre,
+                'red_id' => (int) $items->first()->red_id,
+            ])
+            ->values();
+
+        $establecimientos = $establecimientosFormularios
+            ->map(fn ($establecimiento) => [
+                'id' => (int) $establecimiento->id,
+                'nombre' => $establecimiento->descripcion,
+                'nivel' => (int) $establecimiento->nivel,
+                'municipio_id' => (int) $establecimiento->id_mun,
+                'municipio_nombre' => $establecimiento->municipio_nombre,
+                'red_id' => (int) $establecimiento->red_id,
+                'red_nombre' => $establecimiento->red_nombre,
+            ])
+            ->values();
+
         $periodos = Periodo::query()
             ->with(['formulario.gestion'])
             ->whereIn('formulario_id', $formularios->pluck('id'))
@@ -329,6 +342,9 @@ class ReporteController extends Controller
         return response()->json([
             'periodos' => $periodos,
             'variables' => $variables,
+            'redes' => $redes,
+            'municipios' => $municipios,
+            'establecimientos' => $establecimientos,
         ]);
     }
 
@@ -398,7 +414,14 @@ class ReporteController extends Controller
         $municipioIds = collect($request->input('municipio_ids', []))->map(fn ($id) => (int) $id)->filter()->unique()->values();
         $establecimientoIds = collect($request->input('establecimiento_ids', []))->map(fn ($id) => (int) $id)->filter()->unique()->values();
 
+        $formularioEstablecimientoIds = Establecimiento_Formulario::query()
+            ->whereIn('formulario_id', $formularioIds)
+            ->pluck('establecimiento_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique();
+
         $establecimientosFiltrados = $establecimientosScope
+            ->whereIn('id', $formularioEstablecimientoIds)
             ->when($redIds->isNotEmpty(), fn ($col) => $col->whereIn('red_id', $redIds))
             ->when($municipioIds->isNotEmpty(), fn ($col) => $col->whereIn('id_mun', $municipioIds))
             ->values();

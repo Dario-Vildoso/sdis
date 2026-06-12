@@ -51,23 +51,58 @@ class FormularioController extends Controller
         $formulario->created_at = Carbon::now();
         $formulario->updated_at = Carbon::now();
         $formulario->save();
-        $establecimientos = Establecimiento::all()->where('estado', true)->pluck('id');
+        $establecimientos = Establecimiento::query()
+            ->where('estado', true)
+            ->where('nivel', '>', 0)
+            ->pluck('id');
         $formulario->establecimientos()->attach($establecimientos);
         return redirect()->route('formularios.index')->with('success', 'Formulario creado exitosamente.');
     }
     public function menu()
     {
         $user = Auth::user();
-        if (!$user->alcances->tipo == 'establecimiento') {
+
+        $alcance = $user->alcances()->first();
+
+        if (!$alcance || $alcance->tipo !== 'establecimiento') {
             return redirect()->route('dashboard');
         }
-        $formularios = Formulario::where('sistema_id', $user->sistema_id)
-            ->whereHas('establecimientos', function ($q) use ($user) {
-                $q->where('establecimientos.id', $user->alcances->alcance_id);
-            })  
+
+        $establecimiento_id = $alcance->alcance_id;
+
+        $formularios = Formulario::query()
+
+            ->where('sistema_id', $user->sistema_id)
+
+            ->whereHas('establecimientos', function ($q) use ($establecimiento_id) {
+                $q->where('establecimientos.id', $establecimiento_id);
+            })
+
+            ->with([
+                'periodos' => function ($q) {
+                    $q->orderByDesc('numero');
+                }
+            ])
+
             ->get();
+        $formularios->each(function ($formulario) use ($establecimiento_id) {
+
+            $formulario->periodos->each(function ($periodo) use ($establecimiento_id) {
+
+                $periodo->produccion = Dato::where('periodo_id', $periodo->id)
+                    ->where('establecimiento_id', $establecimiento_id)
+                    ->exists();
+
+            });
+
+        });
+
         $gestiones = Gestion::all();
-        return view('formularios.menu', compact('formularios', 'gestiones'));
+
+        return view('formularios.menu', compact(
+            'formularios',
+            'gestiones'
+        ));
     }
 
     public function cargarPeriodo(Formulario $formulario, Periodo $periodo)
@@ -100,7 +135,7 @@ public function storeData(Request $request, Formulario $formulario, Periodo $per
 {
     $user = Auth::user();
 
-    $establecimiento_id = $user->alcances()->first()->alcance_id;
+        $establecimiento_id = $user->alcances()->first()->alcance_id;
 
     $datos = json_decode($request->datos, true);
 
@@ -220,6 +255,54 @@ public function storeData(Request $request, Formulario $formulario, Periodo $per
         return response()->json([
             'success' => true,
             'message' => 'Establecimientos Asignados.',
+        ]);
+    }
+
+    // Marcar con 0 la primera variable, en su primera subvariable y cabecera
+    public function sinProduccion(Formulario $formulario, Periodo $periodo)
+    {
+        $user = Auth::user();
+        $establecimiento_id = $user->alcances()->first()->alcance_id;
+        $variable = $formulario->variables()->first();
+        if (!$variable) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El formulario no tiene variables asignadas.',
+            ]);
+        }
+        
+        $subvariable = $variable->subvariables()->first();
+        if (!$subvariable) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La variable no tiene subvariables asignadas.',
+            ]);
+        }
+
+        $cabecera = $variable->cabeceras()->whereNull('cabecera_id')->first();
+        if (!$cabecera) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La subvariable no tiene cabeceras asignadas.',
+            ]);
+        }
+        
+        Dato::updateOrCreate(
+            [
+                'cabecera_id' => $cabecera->id,
+                'subvariable_id' => $subvariable->id,
+                'periodo_id' => $periodo->id,
+                'establecimiento_id' => $establecimiento_id,
+            ],
+            [
+                'valor' => 0,
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s'),
+            ]
+        );
+        return response()->json([
+            'success' => true,
+            'message' => 'Dato marcado como sin producción.',
         ]);
     }
 

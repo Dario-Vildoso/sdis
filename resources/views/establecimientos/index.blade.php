@@ -58,7 +58,7 @@
                     <td>{{ $establecimiento->descripcion }}</td>
                     <td>{{ $establecimiento->municipio->nombre }}</td>
                     <td>{{ $establecimiento->codigo_est }}</td>
-                    <td>{{ $establecimiento->nivel }}º Nivel</td>
+                    <td>{{ $establecimiento->nivel > 0 ? $establecimiento->nivel . 'º Nivel' : 'Municipio/Red' }}</td>
                     @if (Auth::user()->hasPermissionTo('establecimientos.management'))
                     <td>
                         <div class="form-check form-switch">
@@ -258,6 +258,7 @@ $(function () {
                                 <span class="input-group-text bg-warning"><i class="ri ri-star-line"></i></span>
                                 <select class="form-select" id="estNivel" name="nivel" required>
                                     <option value="" disabled selected>Nivel</option>
+                                    <option value="0">Municipio/Red</option>
                                     <option value="1">Nivel 1</option>
                                     <option value="2">Nivel 2</option>
                                     <option value="3">Nivel 3</option>
